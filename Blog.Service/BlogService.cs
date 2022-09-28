@@ -43,12 +43,13 @@ public class BlogService : IBlogService
         return post;
     }
 
-    public async Task<List<Author>> GetPostByAuthor(int id)
+    public async Task<List<BlogPost>> GetPostByAuthor(int id)
     {
-        var author = await _dataContext.Authors.Where(x => x.AuthorId == id)
-            .Include(x => x.BlogPosts)
+        var posts = await _dataContext.BlogPosts.Where(x => x.AuthorId == id)
+            .Include(x => x.Author)
+            .Include(x=>x.Category)
             .ToListAsync();
-        return author;
+        return posts;
     }
 
     public async Task<BlogPost> AddPost(NewPostDto newPost)

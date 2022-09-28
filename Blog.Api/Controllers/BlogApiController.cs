@@ -36,16 +36,16 @@ namespace Blog.Api.Controllers
             return Ok(res);
         }
 
-        // [HttpGet("id")]
-        // public async Task<ActionResult<List<Author>>> GetPostByAuthor(int id)
-        // {
-        //     var res = await _blogService.GetPostByAuthor(id);
-        //     if (res==null)
-        //     {
-        //         return BadRequest("No post with such Id");
-        //     }
-        //     return Ok(res);
-        // }
+        [HttpGet("id")]
+        public async Task<ActionResult<List<BlogPost>>> GetPostByAuthor(int id)
+        {
+            var res = await _blogService.GetPostByAuthor(id);
+            if (res==null)
+            {
+                return BadRequest("No author with such Id");
+            }
+            return Ok(res);
+        }
 
         [HttpPost]
         public async Task<ActionResult<BlogPost>> AddPost(NewPostDto newPost)

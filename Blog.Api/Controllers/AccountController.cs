@@ -10,10 +10,10 @@ namespace Blog.Api.Controllers
         [Route("api/[controller]/[action]")]
         [ApiController]
 
-        public class AuthController : ControllerBase
+        public class AccountController : ControllerBase
         {
             private readonly IBlogService _blogService;
-            public AuthController(IBlogService blogService)
+            public AccountController(IBlogService blogService)
             {
                 _blogService = blogService;
             }
@@ -31,7 +31,7 @@ namespace Blog.Api.Controllers
             }
 
             [HttpPost]
-            public async Task<ActionResult<string>> LoginUser(UserDto userDto)
+            public async Task<ActionResult<string>> Login(UserDto userDto)
             {
                 var res = await _blogService.LoginUser(userDto);
                 if (res==null)

@@ -7,7 +7,7 @@ public interface IBlogService
 {
     public Task<List<BlogPost>> GetAllPost();
     public Task<BlogPost> GetPostById(int id);
-    public Task<List<Author>> GetPostByAuthor(int id);
+    public Task<List<BlogPost>> GetPostByAuthor(int id);
     public Task<BlogPost> AddPost(NewPostDto newPost);
     public Task<BlogPost> UpdatePost (NewPostDto updatePost);
     public Task<Author> AddAuthor(NewAuthorDto newAuthor);
