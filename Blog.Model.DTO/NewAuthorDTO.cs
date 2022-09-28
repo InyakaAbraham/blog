@@ -1,6 +1,6 @@
-namespace BlogAPI.ModelDTO;
+namespace Blog.Model.DTO;
 
-public class NewAuthorDTO
+public class NewAuthorDto
 {
     public int Id {get; set;}
     public string Name { get; set; } = string.Empty;

@@ -1,13 +1,11 @@
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
-using Microsoft.AspNetCore.Razor.Language.Intermediate;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
-namespace BlogAPI.ModelDTO;
+namespace Blog.Model.DTO;
 
-public class NewPostDTO
+public class NewPostDto
 {
-    [JsonIgnore]
+   
     [Required]
     public int Id {get; set;}
 
@@ -20,10 +18,9 @@ public class NewPostDTO
     public string[]? Tags { get; set; }
     [Required]
     public int AuthorId { get; set; }
-    [Required]
-    public int CategoryId { get; set; }
 
-  
+    [Required] 
+    public string CategoryName { get; set; } = string.Empty;
     public DateTime Created { get; } = DateTime.UtcNow;
     public DateTime Updated { get; } = DateTime.UtcNow;
 }

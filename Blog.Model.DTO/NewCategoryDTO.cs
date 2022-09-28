@@ -1,10 +1,9 @@
 using System.Text.Json.Serialization;
 
-namespace BlogAPI.ModelDTO;
+namespace Blog.Model.DTO;
 
-public class NewCategoryDTO
+public class NewCategoryDto
 {
-    public int CategoryId { get; set; }
     public string CategoryName { get; set; } = string.Empty;
     [JsonIgnore]
     public int PostId { get; set; }

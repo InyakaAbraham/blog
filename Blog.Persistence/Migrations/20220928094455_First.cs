@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace BlogAPI.Migrations
+namespace Blog.Persistence.Migrations
 {
     public partial class First : Migration
     {
@@ -28,13 +28,24 @@ namespace BlogAPI.Migrations
                 name: "Categories",
                 columns: table => new
                 {
-                    CategoryId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     CategoryName = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Categories", x => x.CategoryId);
+                    table.PrimaryKey("PK_Categories", x => x.CategoryName);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Username = table.Column<string>(type: "text", nullable: false),
+                    PasswordHash = table.Column<byte[]>(type: "bytea", nullable: false),
+                    PasswordSalt = table.Column<byte[]>(type: "bytea", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Username);
                 });
 
             migrationBuilder.CreateTable(
@@ -47,7 +58,7 @@ namespace BlogAPI.Migrations
                     Summary = table.Column<string>(type: "text", nullable: false),
                     Body = table.Column<string>(type: "text", nullable: false),
                     Tags = table.Column<string[]>(type: "text[]", nullable: false),
-                    CategoryId = table.Column<int>(type: "integer", nullable: false),
+                    CategoryName = table.Column<string>(type: "text", nullable: false),
                     AuthorId = table.Column<int>(type: "integer", nullable: false),
                     Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Updated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
@@ -62,10 +73,10 @@ namespace BlogAPI.Migrations
                         principalColumn: "AuthorId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_BlogPosts_Categories_CategoryId",
-                        column: x => x.CategoryId,
+                        name: "FK_BlogPosts_Categories_CategoryName",
+                        column: x => x.CategoryName,
                         principalTable: "Categories",
-                        principalColumn: "CategoryId",
+                        principalColumn: "CategoryName",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -75,15 +86,18 @@ namespace BlogAPI.Migrations
                 column: "AuthorId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_BlogPosts_CategoryId",
+                name: "IX_BlogPosts_CategoryName",
                 table: "BlogPosts",
-                column: "CategoryId");
+                column: "CategoryName");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
                 name: "BlogPosts");
+
+            migrationBuilder.DropTable(
+                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "Authors");

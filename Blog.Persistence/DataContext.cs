@@ -1,13 +1,15 @@
-using BlogAPI.Model;
+using Blog.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace BlogAPI.Persistence;
+namespace Blog.Persistence;
 
 public class DataContext:DbContext
 {
     public DbSet<BlogPost> BlogPosts { get; set;}
     public DbSet<Author> Authors { get; set; }
     public DbSet<Category> Categories { get; set; }
+    public DbSet<User> Users { get; set; }
+    
     public DataContext()
     {
     }
@@ -19,6 +21,6 @@ public class DataContext:DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
-        options.UseNpgsql("Server=127.0.0.1;Port=5432;Database=Blog;UserId=postgres;");
+        options.UseNpgsql("Server=127.0.0.1;Port=5432;Database=BlogV2;UserId=postgres;");
     }
 }

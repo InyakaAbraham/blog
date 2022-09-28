@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace BlogAPI.Model;
+namespace Blog.Models;
 
 public class Author
 {
