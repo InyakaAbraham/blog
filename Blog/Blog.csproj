@@ -4,6 +4,7 @@
         <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <RootNamespace>Blog.Api</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -14,7 +15,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Blog.Persistence\Blog.Persistence.csproj" />
-      <ProjectReference Include="..\Blog.Service\Blog.Service.csproj" />
+      <ProjectReference Include="..\Blog.Services\Blog.Services.csproj" />
     </ItemGroup>
 
 </Project>

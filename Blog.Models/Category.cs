@@ -6,7 +6,7 @@ namespace Blog.Models;
 public class Category
 {
     [Key]
-    public string CategoryName { get; set; } = string.Empty;
+    public string CategoryName { get; set; }
     [JsonIgnore]
     public List<BlogPost>? BlogPosts { get; set; }
 }

@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Blog.Model.DTO;
+namespace Blog.Api.Blog.Model.Dto;
 
 public class NewCategoryDto
 {

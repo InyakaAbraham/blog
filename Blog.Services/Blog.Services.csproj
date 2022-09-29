@@ -4,10 +4,10 @@
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <RootNamespace>Blog.Service</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Blog.Model.DTO\Blog.Model.DTO.csproj" />
       <ProjectReference Include="..\Blog.Models\Blog.Models.csproj" />
       <ProjectReference Include="..\Blog.Persistence\Blog.Persistence.csproj" />
     </ItemGroup>

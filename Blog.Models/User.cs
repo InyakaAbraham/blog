@@ -6,7 +6,7 @@ namespace Blog.Models;
 public class User
 {
     [Key]
-    public string Username { get; set; } = string.Empty;
+    public string Username { get; set; } 
     [JsonIgnore]
     public byte[] PasswordHash { get; set; }
     [JsonIgnore]

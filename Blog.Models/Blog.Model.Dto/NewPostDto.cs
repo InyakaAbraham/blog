@@ -1,26 +1,25 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 
-namespace Blog.Model.DTO;
+namespace Blog.Api.Blog.Model.Dto;
 
 public class NewPostDto
 {
    
     [Required]
     public int Id {get; set;}
-
-    [Required] public string Title { get; set; } = string.Empty;
-
-    [Required] public string Summary { get; set; } = string.Empty;
     [Required] 
-    public string Body { get; set; } = string.Empty;
+    public string Title { get; set; }
+    [Required] 
+    public string Summary { get; set; } 
+    [Required] 
+    public string Body { get; set; }
     [Required]
     public string[]? Tags { get; set; }
     [Required]
     public int AuthorId { get; set; }
 
     [Required] 
-    public string CategoryName { get; set; } = string.Empty;
+    public string CategoryName { get; set; } 
     public DateTime Created { get; } = DateTime.UtcNow;
     public DateTime Updated { get; } = DateTime.UtcNow;
 }

@@ -1,4 +1,4 @@
-using Blog.Model.DTO;
+using Blog.Api.Blog.Model.Dto;
 using Blog.Models;
 using Blog.Service;
 using Microsoft.AspNetCore.Authorization;
@@ -9,11 +9,11 @@ namespace Blog.Api.Controllers
     [Route("api/[controller]/[action]")]
     [ApiController]
     [Authorize]
-    public class BlogApiController : ControllerBase
+    public class BlogController : ControllerBase
     {
         private readonly IBlogService _blogService;
 
-        public BlogApiController(IBlogService blogService)
+        public BlogController(IBlogService blogService)
         {
             _blogService = blogService;
         }

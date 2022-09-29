@@ -1,4 +1,6 @@
-using Blog.Model.DTO;
+
+
+using Blog.Api.Blog.Model.Dto;
 using Blog.Models;
 using Blog.Service;
 using Microsoft.AspNetCore.Mvc;
@@ -10,18 +12,19 @@ namespace Blog.Api.Controllers
         [Route("api/[controller]/[action]")]
         [ApiController]
 
-        public class AccountController : ControllerBase
+        public class UserController : ControllerBase
         {
-            private readonly IBlogService _blogService;
-            public AccountController(IBlogService blogService)
+            
+            private readonly IUserService _userService;
+            public UserController(IUserService userService)
             {
-                _blogService = blogService;
+                _userService = userService;
             }
             
             [HttpPost]
             public async Task<ActionResult<User>> Register(UserDto userDto)
             {
-                var res = await _blogService.RegisterUser(userDto);
+                var res = await _userService.RegisterUser(userDto);
                 if (res==null)
                 {
                     return BadRequest("User already exist");
@@ -33,17 +36,13 @@ namespace Blog.Api.Controllers
             [HttpPost]
             public async Task<ActionResult<string>> Login(UserDto userDto)
             {
-                var res = await _blogService.LoginUser(userDto);
+                var res = await _userService.LoginUser(userDto);
                 if (res==null)
                 {
                     return BadRequest("Wrong username/password");
                 }
                 return Ok(res);
             }
-            
-            
-            
-            
         }
     }
 }

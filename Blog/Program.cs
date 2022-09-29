@@ -1,4 +1,3 @@
-
 using System.Text;
 using Blog.Persistence;
 using Blog.Service;
@@ -17,6 +16,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDbContextFactory<DataContext>();
 builder.Services.AddScoped<IBlogService, BlogService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddSwaggerGen(options =>
 {
