@@ -1,24 +1,22 @@
-using Blog.Api.Blog.Model.Dto;
 using Blog.Models;
 using Blog.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace Blog.Service;
+namespace Blog.Features;
 
 public class BlogService : IBlogService
 {
     private readonly DataContext _dataContext;
-    DateTime now = DateTime.Now;
-    
+
     public BlogService(DataContext dataContext)
     {
         _dataContext = dataContext;
     }
-    
+
     public async Task<List<BlogPost>> GetAllPost()
     {
         return await _dataContext.BlogPosts.Include(x => x.Author)
-            .Include(x=>x.Category)
+            .Include(x => x.Category)
             .ToListAsync();
     }
 
@@ -26,12 +24,9 @@ public class BlogService : IBlogService
     {
         var post = await _dataContext.BlogPosts.Where(x => x.PostId == id)
             .Include(x => x.Author)
-            .Include(x=>x.Category)
+            .Include(x => x.Category)
             .FirstOrDefaultAsync();
-        if (post == null)
-        {
-            return null;
-        }
+        if (post == null) return null;
         return post;
     }
 
@@ -39,21 +34,22 @@ public class BlogService : IBlogService
     {
         var posts = await _dataContext.BlogPosts.Where(x => x.AuthorId == id)
             .Include(x => x.Author)
-            .Include(x=>x.Category)
+            .Include(x => x.Category)
             .ToListAsync();
         return posts;
     }
 
-    public async Task<BlogPost> AddPost(NewPostDto newPost)
+
+    public async Task<BlogPost> AddPost(BlogPost newPost)
     {
         var author = await _dataContext.Authors.Where(x => x.AuthorId == newPost.AuthorId)
             .Include(x => x.BlogPosts)
             .FirstOrDefaultAsync();
-        
+
         var category = await _dataContext.Categories
             .Where(x => x.CategoryName.ToUpper() == newPost.CategoryName.ToUpper())
             .FirstOrDefaultAsync();
-        
+
         var post = new BlogPost
         {
             Title = newPost.Title,
@@ -65,27 +61,24 @@ public class BlogService : IBlogService
             Category = category,
             CategoryName = newPost.CategoryName,
             Updated = newPost.Updated,
-            Created=DateTime.UtcNow
-
+            Created = DateTime.UtcNow
         };
         _dataContext.BlogPosts.Add(post);
         await _dataContext.SaveChangesAsync();
         return post;
     }
 
-    public async Task<BlogPost> UpdatePost(NewPostDto updatePost)
+    public async Task<BlogPost> UpdatePost(BlogPost updatePost)
     {
         var author = await _dataContext.Authors.Where(x => x.AuthorId == updatePost.AuthorId)
             .Include(x => x.BlogPosts)
             .FirstOrDefaultAsync();
-        var category = await _dataContext.Categories.Where(x => x.CategoryName.ToUpper() == updatePost.CategoryName.ToUpper())
+        var category = await _dataContext.Categories
+            .Where(x => x.CategoryName.ToUpper() == updatePost.CategoryName.ToUpper())
             .FirstOrDefaultAsync();
-        if (author == null)
-        {
-            return null;
-        }
-        var post = await _dataContext.BlogPosts.FindAsync(updatePost.Id);
-        post.PostId = updatePost.Id;
+        if (author == null) return null;
+        var post = await _dataContext.BlogPosts.FindAsync(updatePost.PostId);
+        post.PostId = updatePost.PostId;
         post.Title = updatePost.Title;
         post.Summary = updatePost.Summary;
         post.Body = updatePost.Body;
@@ -98,17 +91,16 @@ public class BlogService : IBlogService
         _dataContext.BlogPosts.Update(post);
         await _dataContext.SaveChangesAsync();
         return post;
-
     }
 
-    public async Task<Author> AddAuthor(NewAuthorDto newAuthor)
+    public async Task<Author> AddAuthor(Author newAuthor)
     {
-        var post = await _dataContext.BlogPosts.Where(x => x.AuthorId == newAuthor.Id)
+        var post = await _dataContext.BlogPosts.Where(x => x.AuthorId == newAuthor.AuthorId)
             .Include(x => x.Author)
             .ToListAsync();
         var author = new Author
         {
-            AuthorId = newAuthor.Id,
+            AuthorId = newAuthor.AuthorId,
             Name = newAuthor.Name,
             Description = newAuthor.Description,
             BlogPosts = post
@@ -118,15 +110,11 @@ public class BlogService : IBlogService
         return author;
     }
 
-    public async Task<Category> AddCategory(NewCategoryDto newCategory)
+    public async Task<Category> AddCategory(Category newCategory)
     {
-        var post = await _dataContext.BlogPosts.Where(x => x.PostId == newCategory.PostId)
-            .Include(x => x.Author)
-            .Include(x => x.Category).ToListAsync();
         var category = new Category
         {
-            CategoryName = newCategory.CategoryName,
-            BlogPosts = post
+            CategoryName = newCategory.CategoryName
         };
         _dataContext.Categories.Add(category);
         await _dataContext.SaveChangesAsync();

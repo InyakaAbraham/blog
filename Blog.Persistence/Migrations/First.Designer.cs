@@ -24,7 +24,7 @@ namespace Blog.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Blog.Models.Author", b =>
+            modelBuilder.Entity("Blog.Api.Models.Author", b =>
                 {
                     b.Property<int>("AuthorId")
                         .ValueGeneratedOnAdd()
@@ -45,7 +45,7 @@ namespace Blog.Persistence.Migrations
                     b.ToTable("Authors");
                 });
 
-            modelBuilder.Entity("Blog.Models.BlogPost", b =>
+            modelBuilder.Entity("Blog.Api.Models.BlogPost", b =>
                 {
                     b.Property<int>("PostId")
                         .ValueGeneratedOnAdd()
@@ -91,7 +91,7 @@ namespace Blog.Persistence.Migrations
                     b.ToTable("BlogPosts");
                 });
 
-            modelBuilder.Entity("Blog.Models.Category", b =>
+            modelBuilder.Entity("Blog.Api.Models.Category", b =>
                 {
                     b.Property<string>("CategoryName")
                         .HasColumnType("text");
@@ -101,7 +101,7 @@ namespace Blog.Persistence.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("Blog.Models.User", b =>
+            modelBuilder.Entity("Blog.Api.Models.User", b =>
                 {
                     b.Property<string>("Username")
                         .HasColumnType("text");
@@ -119,15 +119,15 @@ namespace Blog.Persistence.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Blog.Models.BlogPost", b =>
+            modelBuilder.Entity("Blog.Api.Models.BlogPost", b =>
                 {
-                    b.HasOne("Blog.Models.Author", "Author")
+                    b.HasOne("Blog.Api.Models.Author", "Author")
                         .WithMany("BlogPosts")
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Blog.Models.Category", "Category")
+                    b.HasOne("Blog.Api.Models.Category", "Category")
                         .WithMany("BlogPosts")
                         .HasForeignKey("CategoryName")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -138,12 +138,12 @@ namespace Blog.Persistence.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("Blog.Models.Author", b =>
+            modelBuilder.Entity("Blog.Api.Models.Author", b =>
                 {
                     b.Navigation("BlogPosts");
                 });
 
-            modelBuilder.Entity("Blog.Models.Category", b =>
+            modelBuilder.Entity("Blog.Api.Models.Category", b =>
                 {
                     b.Navigation("BlogPosts");
                 });

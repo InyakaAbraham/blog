@@ -3,13 +3,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Persistence;
 
-public class DataContext:DbContext
+public class DataContext : DbContext
 {
-    public DbSet<BlogPost> BlogPosts { get; set;}
-    public DbSet<Author> Authors { get; set; }
-    public DbSet<Category> Categories { get; set; }
-    public DbSet<User> Users { get; set; }
-    
     public DataContext()
     {
     }
@@ -18,6 +13,11 @@ public class DataContext:DbContext
         : base(options)
     {
     }
+
+    public DbSet<BlogPost> BlogPosts { get; set; }
+    public DbSet<Author> Authors { get; set; }
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<User> Users { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
