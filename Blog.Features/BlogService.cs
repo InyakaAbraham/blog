@@ -13,7 +13,7 @@ public class BlogService : IBlogService
         _dataContext = dataContext;
     }
 
-    public async Task<List<BlogPost>> GetAllPost()
+    public async Task<List<BlogPost>> GetAllPosts()
     {
         return await _dataContext.BlogPosts.Include(x => x.Author)
             .Include(x => x.Category)
@@ -30,7 +30,7 @@ public class BlogService : IBlogService
         return post;
     }
 
-    public async Task<List<BlogPost>> GetPostByAuthor(int id)
+    public async Task<List<BlogPost>> GetPostsByAuthor(int id)
     {
         var posts = await _dataContext.BlogPosts.Where(x => x.AuthorId == id)
             .Include(x => x.Author)

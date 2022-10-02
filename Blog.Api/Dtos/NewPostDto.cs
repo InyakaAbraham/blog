@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Blog.Api.Blog.Model.Dto;
+namespace Blog.Api.Dtos;
 
 public class NewPostDto
 {
@@ -18,6 +18,6 @@ public class NewPostDto
 
     [Required] public string CategoryName { get; set; }
 
-    public DateTime Created { get; init; } = DateTime.UtcNow;
-    public DateTime Updated { get; init; } = DateTime.UtcNow;
+    public DateTime Created { get; init; } 
+    public DateTime Updated { get; init; } 
 }

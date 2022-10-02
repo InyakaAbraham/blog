@@ -1,4 +1,4 @@
-using Blog.Api.Blog.Model.Dto;
+using Blog.Api.Dtos;
 using Blog.Features;
 using Blog.Models;
 using Blog.Persistence;

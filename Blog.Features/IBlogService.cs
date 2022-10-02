@@ -4,9 +4,9 @@ namespace Blog.Features;
 
 public interface IBlogService
 {
-    public Task<List<BlogPost>> GetAllPost();
+    public Task<List<BlogPost>> GetAllPosts();
     public Task<BlogPost> GetPostById(int id);
-    public Task<List<BlogPost>> GetPostByAuthor(int id);
+    public Task<List<BlogPost>> GetPostsByAuthor(int id);
     public Task<BlogPost> AddPost(BlogPost newPost);
     public Task<BlogPost> UpdatePost(BlogPost updatePost);
     public Task<Author> AddAuthor(Author newAuthor);

@@ -1,4 +1,4 @@
-namespace Blog.Api.Blog.Model.Dto;
+namespace Blog.Api.Dtos;
 
 public class UserDto
 {

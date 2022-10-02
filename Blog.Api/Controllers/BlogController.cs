@@ -1,4 +1,4 @@
-using Blog.Api.Blog.Model.Dto;
+using Blog.Api.Dtos;
 using Blog.Features;
 using Blog.Models;
 using Blog.Persistence;
@@ -26,7 +26,7 @@ public class BlogController : ControllerBase
     [AllowAnonymous]
     public Task<List<BlogPost>> GetAllPost()
     {
-        return _blogService.GetAllPost();
+        return _blogService.GetAllPosts();
     }
 
     [HttpGet("id")]
@@ -41,7 +41,7 @@ public class BlogController : ControllerBase
     [HttpGet("id")]
     public async Task<ActionResult<List<BlogPost>>> GetPostByAuthor(int id)
     {
-        var res = await _blogService.GetPostByAuthor(id);
+        var res = await _blogService.GetPostsByAuthor(id);
         if (res == null) return BadRequest("No author with such Id");
         return Ok(res);
     }
@@ -57,7 +57,6 @@ public class BlogController : ControllerBase
             .Where(x => x.CategoryName.ToUpper() == newPost.CategoryName.ToUpper())
             .FirstOrDefaultAsync();
 
-        BlogPost? res = null;
         var post = new BlogPost
         {
             Title = newPost.Title,
@@ -72,9 +71,12 @@ public class BlogController : ControllerBase
             Created = newPost.Created,
             Updated = newPost.Updated
         };
-        res = await _blogService.AddPost(post);
-        if (res == null) return BadRequest("Kindly add a post in the valid format");
-        return Ok(res);
+
+        var blogPost = await _blogService.AddPost(post);
+
+        if (blogPost == null) return BadRequest("Kindly add a post in the valid format");
+
+        return Ok(blogPost);
     }
 
     [HttpPost]
@@ -89,10 +91,11 @@ public class BlogController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Category>> AddCategory(Category newCategory)
     {
-        var res = await _blogService.AddCategory(newCategory);
-        if (res == null) return BadRequest("Kindly enter a valid Author field");
+        var category = await _blogService.AddCategory(newCategory);
 
-        return Ok(res);
+        if (category == null) return BadRequest("Kindly enter a valid Author field");
+
+        return Ok(category);
     }
 
     [HttpPut]
@@ -104,10 +107,8 @@ public class BlogController : ControllerBase
         var category = await _dataContext.Categories
             .Where(x => x.CategoryName.ToUpper() == updatePost.CategoryName.ToUpper())
             .FirstOrDefaultAsync();
-
-        BlogPost? res = null;
-
-        var post = await _dataContext.BlogPosts.FindAsync(updatePost.Id);
+        
+        var post = await _dataContext.BlogPosts.FindAsync(updatePost.Id) ?? new BlogPost();
         post.Author = author;
         post.Category = category;
         post.Body = updatePost.Body;
@@ -117,10 +118,11 @@ public class BlogController : ControllerBase
         post.Created = post.Created;
         post.Updated = DateTime.UtcNow;
 
-        res = await _blogService.UpdatePost(post);
-        if (res == null) return BadRequest("No post with such id");
+        var blogPost = await _blogService.UpdatePost(post);
 
-        return Ok(res);
+        if (blogPost == null) return BadRequest("No post with such id");
+
+        return Ok(blogPost);
     }
 
     [HttpDelete("id")]
