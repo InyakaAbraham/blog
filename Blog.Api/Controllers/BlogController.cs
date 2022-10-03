@@ -107,7 +107,7 @@ public class BlogController : ControllerBase
         var category = await _dataContext.Categories
             .Where(x => x.CategoryName.ToUpper() == updatePost.CategoryName.ToUpper())
             .FirstOrDefaultAsync();
-        
+
         var post = await _dataContext.BlogPosts.FindAsync(updatePost.Id) ?? new BlogPost();
         post.Author = author;
         post.Category = category;

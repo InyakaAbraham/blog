@@ -1,6 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 using Blog.Models;
 using Microsoft.Extensions.Configuration;
@@ -17,26 +16,18 @@ public class UserService : IUserService
         _configuration = configuration;
     }
 
-    public void CreatPasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+    public async Task<string?> CreatPasswordHash(string password)
     {
-        using (var hmac = new HMACSHA512())
-        {
-            passwordSalt = hmac.Key;
-            passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-        }
+        return await Task.FromResult(BCrypt.Net.BCrypt.HashPassword(password));
     }
 
 
-    public bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
+    public bool VerifyPasswordHash(string password, string passwordHash)
     {
-        using (var hmac = new HMACSHA512(passwordSalt))
-        {
-            var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return computedHash.SequenceEqual(passwordHash);
-        }
+        return BCrypt.Net.BCrypt.Verify(password, passwordHash);
     }
 
-    public string CreateToken(User user)
+    public async Task<string?> CreateToken(User user)
     {
         var claims = new List<Claim>
         {
@@ -56,6 +47,6 @@ public class UserService : IUserService
         );
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
-        return jwt;
+        return await Task.FromResult(jwt);
     }
 }

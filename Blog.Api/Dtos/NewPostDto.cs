@@ -18,6 +18,6 @@ public class NewPostDto
 
     [Required] public string CategoryName { get; set; }
 
-    public DateTime Created { get; init; } 
-    public DateTime Updated { get; init; } 
+    public DateTime Created { get; init; }
+    public DateTime Updated { get; init; }
 }
