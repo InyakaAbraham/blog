@@ -39,7 +39,7 @@ public class BlogController : ControllerBase
     }
 
     [HttpGet("id")]
-    public async Task<ActionResult<List<BlogPost>>> GetPostByAuthor(int id)
+    public async Task<ActionResult<List<BlogPost>>> GetPostsByAuthor(int id)
     {
         var res = await _blogService.GetPostsByAuthor(id);
         if (res == null) return BadRequest("No author with such Id");
