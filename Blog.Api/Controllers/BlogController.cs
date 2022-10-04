@@ -10,7 +10,7 @@ namespace Blog.Api.Controllers;
 
 [Route("api/[controller]/[action]")]
 [ApiController]
-[Authorize]
+// [Authorize]
 public class BlogController : ControllerBase
 {
     private readonly IBlogService _blogService;
@@ -24,10 +24,9 @@ public class BlogController : ControllerBase
 
     [HttpGet]
     [AllowAnonymous]
-    public async Task<ActionResult<List<BlogPost>>> GetAllPosts()
+    public  async Task<ActionResult<List<BlogPost>>> GetAllPosts()
     {
-        var blogPosts = await _blogService.GetAllPosts();
-        return Ok($"Successful\n{blogPosts}");
+        return Ok(await _blogService.GetAllPosts());
     }
 
     [HttpGet("id")]
@@ -36,7 +35,7 @@ public class BlogController : ControllerBase
         var blogPost = await _blogService.GetPostById(id);
         if (blogPost == null) return BadRequest("No post with such Id");
 
-        return Ok($"Successful\nBelow is the post with id {id}\n{blogPost}");
+        return Ok(blogPost);
     }
 
     [HttpGet("id")]
@@ -44,7 +43,7 @@ public class BlogController : ControllerBase
     {
         var blogPosts = await _blogService.GetPostsByAuthor(id);
         if (blogPosts == null) return BadRequest("No author with such Id");
-        return Ok($"Successful\nBelow is a list of post(s) by author with is {id}\n{blogPosts}");
+        return Ok(blogPosts);
     }
 
     [HttpPost]
@@ -77,7 +76,7 @@ public class BlogController : ControllerBase
 
         if (blogPost == null) return BadRequest("Kindly add a post in the valid format");
 
-        return Ok($"Successful\nBelow is the newly created BlogPost\n{blogPost}");
+        return Ok(blogPost);
     }
 
     [HttpPost]
@@ -96,7 +95,7 @@ public class BlogController : ControllerBase
 
         if (category == null) return BadRequest("Kindly enter a valid Author field");
 
-        return Ok($"Successful\nBelow is the newly created Category\n{category}");
+        return Ok(category);
     }
 
     [HttpPut]
@@ -123,12 +122,12 @@ public class BlogController : ControllerBase
 
         if (blogPost == null) return BadRequest("No post with such id");
 
-        return Ok($"Successful\nBelow is the updated BlogPost\n{blogPost}");
+        return Ok(blogPost);
     }
 
     [HttpDelete("id")]
     public ActionResult<Task> DeletePost(int id)
     {
-        return Ok("Post deleted successfully"+_blogService.DeletePost(id));
+        return Ok(_blogService.DeletePost(id));
     }
 }
