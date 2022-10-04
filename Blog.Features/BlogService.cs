@@ -26,9 +26,9 @@ public class BlogService : IBlogService
             .Include(x => x.Author)
             .Include(x => x.Category)
             .FirstOrDefaultAsync();
-        
+
         if (post == null) return null;
-        
+
         return post;
     }
 
@@ -38,7 +38,7 @@ public class BlogService : IBlogService
             .Include(x => x.Author)
             .Include(x => x.Category)
             .ToListAsync();
-        
+
         return posts;
     }
 

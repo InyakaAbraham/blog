@@ -10,7 +10,7 @@ namespace Blog.Api.Controllers;
 
 [Route("api/[controller]/[action]")]
 [ApiController]
-// [Authorize]
+[Authorize]
 public class BlogController : ControllerBase
 {
     private readonly IBlogService _blogService;
@@ -24,7 +24,7 @@ public class BlogController : ControllerBase
 
     [HttpGet]
     [AllowAnonymous]
-    public  async Task<ActionResult<List<BlogPost>>> GetAllPosts()
+    public async Task<ActionResult<List<BlogPost>>> GetAllPosts()
     {
         return Ok(await _blogService.GetAllPosts());
     }
@@ -34,7 +34,6 @@ public class BlogController : ControllerBase
     {
         var blogPost = await _blogService.GetPostById(id);
         if (blogPost == null) return BadRequest("No post with such Id");
-
         return Ok(blogPost);
     }
 
@@ -73,9 +72,7 @@ public class BlogController : ControllerBase
         };
 
         var blogPost = await _blogService.AddPost(post);
-
         if (blogPost == null) return BadRequest("Kindly add a post in the valid format");
-
         return Ok(blogPost);
     }
 
@@ -84,7 +81,6 @@ public class BlogController : ControllerBase
     {
         var author = await _blogService.AddAuthor(newAuthor);
         if (author == null) return BadRequest("Kindly enter a valid Author field");
-
         return Ok($"Successful\nBelow is the newly added Author\n{author}");
     }
 
@@ -92,9 +88,7 @@ public class BlogController : ControllerBase
     public async Task<ActionResult<Category>> AddCategory(Category newCategory)
     {
         var category = await _blogService.AddCategory(newCategory);
-
         if (category == null) return BadRequest("Kindly enter a valid Author field");
-
         return Ok(category);
     }
 
@@ -119,9 +113,7 @@ public class BlogController : ControllerBase
         post.Updated = DateTime.UtcNow;
 
         var blogPost = await _blogService.UpdatePost(post);
-
         if (blogPost == null) return BadRequest("No post with such id");
-
         return Ok(blogPost);
     }
 
