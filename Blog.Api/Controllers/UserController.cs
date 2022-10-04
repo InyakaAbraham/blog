@@ -25,12 +25,12 @@ public class UserController : ControllerBase
     public async Task<ActionResult<User>> Register(UserDto userDto)
     {
         var passwordHash = _userService.CreatPasswordHash(userDto.Password);
-        var req = await _dataContext.Users.FirstOrDefaultAsync(x => x.Username == userDto.UserName);
+        var req = await _dataContext.Users.FirstOrDefaultAsync(x => x.Username == userDto.Username);
         if (req == null)
         {
             var user = new User
             {
-                Username = userDto.UserName,
+                Username = userDto.Username,
                 PasswordHash = await passwordHash
             };
             _dataContext.Users.Add(user);
@@ -44,7 +44,7 @@ public class UserController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<string>> Login(UserDto userDto)
     {
-        var user = await _dataContext.Users.FirstOrDefaultAsync(x => x.Username == userDto.UserName);
+        var user = await _dataContext.Users.FirstOrDefaultAsync(x => x.Username == userDto.Username);
 
         if (user == null) return BadRequest("Wrong username/password");
 

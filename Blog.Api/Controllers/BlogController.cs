@@ -24,26 +24,27 @@ public class BlogController : ControllerBase
 
     [HttpGet]
     [AllowAnonymous]
-    public Task<List<BlogPost>> GetAllPost()
+    public async Task<ActionResult<List<BlogPost>>> GetAllPosts()
     {
-        return _blogService.GetAllPosts();
+        var blogPosts = await _blogService.GetAllPosts();
+        return Ok($"Successful\n{blogPosts}");
     }
 
     [HttpGet("id")]
     public async Task<ActionResult<BlogPost>> GetPostById(int id)
     {
-        var res = await _blogService.GetPostById(id);
-        if (res == null) return BadRequest("No post with such Id");
+        var blogPost = await _blogService.GetPostById(id);
+        if (blogPost == null) return BadRequest("No post with such Id");
 
-        return Ok(res);
+        return Ok($"Successful\nBelow is the post with id {id}\n{blogPost}");
     }
 
     [HttpGet("id")]
     public async Task<ActionResult<List<BlogPost>>> GetPostsByAuthor(int id)
     {
-        var res = await _blogService.GetPostsByAuthor(id);
-        if (res == null) return BadRequest("No author with such Id");
-        return Ok(res);
+        var blogPosts = await _blogService.GetPostsByAuthor(id);
+        if (blogPosts == null) return BadRequest("No author with such Id");
+        return Ok($"Successful\nBelow is a list of post(s) by author with is {id}\n{blogPosts}");
     }
 
     [HttpPost]
@@ -76,16 +77,16 @@ public class BlogController : ControllerBase
 
         if (blogPost == null) return BadRequest("Kindly add a post in the valid format");
 
-        return Ok(blogPost);
+        return Ok($"Successful\nBelow is the newly created BlogPost\n{blogPost}");
     }
 
     [HttpPost]
     public async Task<ActionResult<Author>> AddAuthor(Author newAuthor)
     {
-        var res = await _blogService.AddAuthor(newAuthor);
-        if (res == null) return BadRequest("Kindly enter a valid Author field");
+        var author = await _blogService.AddAuthor(newAuthor);
+        if (author == null) return BadRequest("Kindly enter a valid Author field");
 
-        return Ok(res);
+        return Ok("Successful\nBelow is the newly added Author\n"+author);
     }
 
     [HttpPost]
@@ -95,7 +96,7 @@ public class BlogController : ControllerBase
 
         if (category == null) return BadRequest("Kindly enter a valid Author field");
 
-        return Ok(category);
+        return Ok("Successful\nBelow is the newly added Category\n"+category);
     }
 
     [HttpPut]
@@ -122,12 +123,12 @@ public class BlogController : ControllerBase
 
         if (blogPost == null) return BadRequest("No post with such id");
 
-        return Ok(blogPost);
+        return Ok("Successful\nBelow is the updated BlogPost\n"+blogPost);
     }
 
     [HttpDelete("id")]
-    public Task DeletePost(int id)
+    public ActionResult<Task> DeletePost(int id)
     {
-        return _blogService.DeletePost(id);
+        return Ok("Post deleted successfully"+_blogService.DeletePost(id));
     }
 }
