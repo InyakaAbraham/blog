@@ -86,7 +86,7 @@ public class BlogController : ControllerBase
         var author = await _blogService.AddAuthor(newAuthor);
         if (author == null) return BadRequest("Kindly enter a valid Author field");
 
-        return Ok("Successful\nBelow is the newly added Author\n"+author);
+        return Ok($"Successful\nBelow is the newly added Author\n{author}");
     }
 
     [HttpPost]
@@ -96,7 +96,7 @@ public class BlogController : ControllerBase
 
         if (category == null) return BadRequest("Kindly enter a valid Author field");
 
-        return Ok("Successful\nBelow is the newly added Category\n"+category);
+        return Ok($"Successful\nBelow is the newly created Category\n{category}");
     }
 
     [HttpPut]
@@ -123,7 +123,7 @@ public class BlogController : ControllerBase
 
         if (blogPost == null) return BadRequest("No post with such id");
 
-        return Ok("Successful\nBelow is the updated BlogPost\n"+blogPost);
+        return Ok($"Successful\nBelow is the updated BlogPost\n{blogPost}");
     }
 
     [HttpDelete("id")]
