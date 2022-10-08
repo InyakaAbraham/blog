@@ -1,7 +1,6 @@
 using Blog.Api.Dtos;
 using Blog.Features;
 using Blog.Models;
-using Blog.Persistence;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Blog.Api.Controllers;
@@ -11,7 +10,7 @@ namespace Blog.Api.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IBlogService _blogService;
-    
+
     public UserController(IBlogService blogService)
     {
         _blogService = blogService;
@@ -22,17 +21,17 @@ public class UserController : ControllerBase
     {
         var passwordHash = _blogService.CreatePasswordHash(request.Password);
         var user = await _blogService.GetUserByEmailAddress(request.EmailAddress);
-        
-        if (user != null||user?.Username==request.Username)
+
+        if (user != null || user?.Username == request.Username)
             return BadRequest("User already exist :(");
-        
-        await _blogService.CreateUser(new User 
+
+        await _blogService.CreateUser(new User
         {
             EmailAddress = request.EmailAddress,
             Username = request.Username,
             PasswordHash = await passwordHash
         });
-            
+
         return Ok("Registration Successful:)");
     }
 
@@ -43,10 +42,8 @@ public class UserController : ControllerBase
 
         if (user == null) return BadRequest("Wrong username/password");
         if (_blogService.VerifyPassword(loginUserRequest.Password, user) == false)
-        {
             return BadRequest("Wrong username/password");
-        }
-        
-        return Ok(new JwtDto{AccessToken = await _blogService.CreateToken(user)});
+
+        return Ok(new JwtDto { AccessToken = await _blogService.CreateToken(user) });
     }
 }

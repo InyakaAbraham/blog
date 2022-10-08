@@ -29,7 +29,7 @@ public class BlogService : IBlogService
         var post = await _dataContext.BlogPosts
             .Where(x => x != null && x.PostId == id)
             .FirstOrDefaultAsync();
-        
+
         return post ?? null;
     }
 
@@ -37,7 +37,8 @@ public class BlogService : IBlogService
     {
         return await _dataContext.BlogPosts
             .Where(x => x != null && x.AuthorId == id)
-            .ToListAsync();;
+            .ToListAsync();
+        ;
     }
 
 
@@ -63,10 +64,10 @@ public class BlogService : IBlogService
             Updated = newPost.Updated,
             Created = DateTime.UtcNow
         };
-        
+
         _dataContext.BlogPosts.Add(post);
         await _dataContext.SaveChangesAsync();
-        
+
         return post;
     }
 
@@ -76,12 +77,13 @@ public class BlogService : IBlogService
             .Where(x => x.AuthorId == updatePost.AuthorId)
             .FirstOrDefaultAsync();
         var category = await _dataContext.Categories
-            .Where(x => string.Equals(x.CategoryName, updatePost.CategoryName, StringComparison.CurrentCultureIgnoreCase))
+            .Where(x => string.Equals(x.CategoryName, updatePost.CategoryName,
+                StringComparison.CurrentCultureIgnoreCase))
             .FirstOrDefaultAsync();
         if (author == null) return null;
-        
+
         var post = await _dataContext.BlogPosts.FindAsync(updatePost.PostId);
-        
+
         if (post != null)
         {
             post.Title = updatePost.Title;
@@ -95,7 +97,7 @@ public class BlogService : IBlogService
 
             _dataContext.BlogPosts.Update(post);
             await _dataContext.SaveChangesAsync();
-            
+
             return post;
         }
 
@@ -107,7 +109,7 @@ public class BlogService : IBlogService
         var post = await _dataContext.BlogPosts
             .Where(x => x != null && x.AuthorId == newAuthor.AuthorId)
             .ToListAsync();
-        
+
         var author = new Author
         {
             AuthorId = newAuthor.AuthorId,

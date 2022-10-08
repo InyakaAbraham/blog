@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Blog.Persistence.EntityTypeConfigurations;
 
-public class Category:IEntityTypeConfiguration<Models.Category>
+public class Category : IEntityTypeConfiguration<Models.Category>
 {
     public void Configure(EntityTypeBuilder<Models.Category> builder)
     {

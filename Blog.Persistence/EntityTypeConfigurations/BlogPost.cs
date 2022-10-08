@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Blog.Persistence.EntityTypeConfigurations;
 
-public class BlogPost:IEntityTypeConfiguration<Models.BlogPost>
+public class BlogPost : IEntityTypeConfiguration<Models.BlogPost>
 {
     public void Configure(EntityTypeBuilder<Models.BlogPost> builder)
     {
