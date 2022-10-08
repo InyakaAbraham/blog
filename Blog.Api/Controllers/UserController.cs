@@ -24,7 +24,7 @@ public class UserController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<User>> Register(UserDto userDto)
     {
-        var passwordHash = _userService.CreatPasswordHash(userDto.Password);
+        var passwordHash = _userService.CreatePasswordHash(userDto.Password);
         var req = await _dataContext.Users.FirstOrDefaultAsync(x => x.Username == userDto.Username);
         if (req == null)
         {

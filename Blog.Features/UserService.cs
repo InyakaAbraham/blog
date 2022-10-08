@@ -16,7 +16,7 @@ public class UserService : IUserService
         _configuration = configuration;
     }
 
-    public async Task<string?> CreatPasswordHash(string password)
+    public async Task<string?> CreatePasswordHash(string password)
     {
         return await Task.FromResult(BCrypt.Net.BCrypt.HashPassword(password));
     }
