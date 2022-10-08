@@ -10,8 +10,8 @@ using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-    .AddJsonFile($"appsettings.local.json", optional: false)
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.local.json", optional: false, reloadOnChange: true)
     .AddEnvironmentVariables()
     .Build();
 var appSettings = config.GetSection("AppSettings").Get<AppSettings>();
