@@ -4,7 +4,7 @@ namespace Blog.Api.Dtos;
 
 public class NewPostDto
 {
-    [Required] public int Id { get; set; }
+    [Required] public int PostId { get; set; }
 
     [Required] public string Title { get; set; }
 

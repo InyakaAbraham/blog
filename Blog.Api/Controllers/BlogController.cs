@@ -29,7 +29,7 @@ public class BlogController : ControllerBase
     public async Task<ActionResult<BlogPost>> GetPostById(int id)
     {
         var blogPost = await _blogService.GetPostById(id);
-        if (blogPost == null) return BadRequest("Not Found");
+        if (blogPost == null) return NotFound("Not Found");
         return Ok(blogPost);
     }
 
@@ -54,9 +54,6 @@ public class BlogController : ControllerBase
             CategoryName = newPost.CategoryName,
             AuthorId = newPost.AuthorId,
             Tags = newPost.Tags,
-            PostId = newPost.Id,
-            Created = newPost.Created,
-            Updated = newPost.Updated,
             Author = author
         });
         if (blogPost == null) return BadRequest("Kindly add a post in the valid format");
@@ -66,23 +63,22 @@ public class BlogController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Author?>> AddAuthor(Author newAuthor)
     {
-        var author = await _blogService.AddAuthor(newAuthor);
-        return Ok(author);
+        return Ok(await _blogService.AddAuthor(newAuthor));
     }
 
     [HttpPost]
-    public async Task<ActionResult<Category>> AddCategory(Category newCategory)
+    public async Task<ActionResult> AddCategory(Category newCategory)
     {
-        var category = await _blogService.AddCategory(newCategory);
-        return Ok(category);
+        await _blogService.AddCategory(newCategory);
+        return Ok("Successful :)");
     }
 
     [HttpPut]
-    public async Task<ActionResult<BlogPost>> UpdatePost(NewPostDto updatePost)
+    public async Task<ActionResult<BlogPost>> UpdatePost(BlogPost updatePost)
     {
-        var author = await _blogService.GetAuthorById(updatePost.Id);
+        var author = await _blogService.GetAuthorById(updatePost.PostId);
         var category = await _blogService.GetCategoryByName(updatePost.CategoryName);
-        var post = await _blogService.GetPostById(updatePost.Id) ?? new BlogPost();
+        var post = await _blogService.GetPostById(updatePost.PostId) ?? new BlogPost();
         post.Author = author;
         post.Category = category;
         post.Body = updatePost.Body;
@@ -93,7 +89,7 @@ public class BlogController : ControllerBase
         post.Updated = DateTime.UtcNow;
 
         var blogPost = await _blogService.UpdatePost(post);
-        if (blogPost == null) return BadRequest("Not Found");
+        if (blogPost == null) return NotFound("Not Found");
         return Ok(blogPost);
     }
 

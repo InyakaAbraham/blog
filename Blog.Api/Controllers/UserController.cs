@@ -18,24 +18,22 @@ public class UserController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<User>> Register(RegisterUserRequest registerUserRequest)
+    public async Task<ActionResult> Register(RegisterUserRequest request)
     {
-        var passwordHash = _blogService.CreatePasswordHash(registerUserRequest.Password);
-        var user = await _blogService.GetUserByEmailAddress(registerUserRequest.EmailAddress);
+        var passwordHash = _blogService.CreatePasswordHash(request.Password);
+        var user = await _blogService.GetUserByEmailAddress(request.EmailAddress);
         
-        if (user == null && user?.Username!=registerUserRequest.Username)
+        if (user != null||user?.Username==request.Username)
+            return BadRequest("User already exist :(");
+        
+        await _blogService.CreateUser(new User 
         {
-            var newUser = new User
-            {
-                EmailAddress = registerUserRequest.EmailAddress,
-                Username = registerUserRequest.Username,
-                PasswordHash = await passwordHash
-            };
-            await _blogService.CreateUser(newUser);
-            return Ok(newUser);
-        }
-
-        return BadRequest("User already exist");
+            EmailAddress = request.EmailAddress,
+            Username = request.Username,
+            PasswordHash = await passwordHash
+        });
+            
+        return Ok("Registration Successful:)");
     }
 
     [HttpPost]
