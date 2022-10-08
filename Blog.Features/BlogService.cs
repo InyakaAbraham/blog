@@ -1,16 +1,22 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using Blog.Models;
 using Blog.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Blog.Features;
 
 public class BlogService : IBlogService
 {
+    private readonly AppSettings _appSettings;
     private readonly DataContext _dataContext;
 
-    public BlogService(DataContext dataContext)
+    public BlogService(DataContext dataContext, AppSettings appSettings)
     {
         _dataContext = dataContext;
+        _appSettings = appSettings;
     }
 
     public async Task<List<BlogPost>> GetAllPosts()
@@ -43,7 +49,7 @@ public class BlogService : IBlogService
     }
 
 
-    public async Task<BlogPost> AddPost(BlogPost newPost)
+    public async Task<BlogPost?> AddPost(BlogPost newPost)
     {
         var author = await _dataContext.Authors.Where(x => x.AuthorId == newPost.AuthorId)
             .Include(x => x.BlogPosts)
@@ -129,5 +135,62 @@ public class BlogService : IBlogService
         var post = await _dataContext.BlogPosts.FindAsync(id);
         _dataContext.BlogPosts.Remove(post);
         await _dataContext.SaveChangesAsync();
+    }
+
+    public async Task<User?> GetUserByEmailAddress(string emailAddress)
+    {
+        return await _dataContext.Users.SingleOrDefaultAsync(u => u!.EmailAddress == emailAddress);
+    }
+
+    public async Task<Author?> GetAuthorById(int authorId)
+    {
+        return await _dataContext.Authors.SingleOrDefaultAsync(a => a.AuthorId == authorId);
+    }
+
+    public async Task<Category?> GetCategoryByName(string categoryName)
+    {
+        return await _dataContext.Categories
+            .SingleOrDefaultAsync(x => string.Equals(x.CategoryName, categoryName,
+                StringComparison.CurrentCultureIgnoreCase));
+    }
+
+    public async Task<User> CreateUser(User user)
+    {
+        _dataContext.Users.Add(user);
+        await _dataContext.SaveChangesAsync();
+        return user;
+    }
+
+    public async Task<string?> CreatePasswordHash(string password)
+    {
+        return await Task.FromResult(BCrypt.Net.BCrypt.HashPassword(password));
+    }
+
+
+    public bool VerifyPassword(string password, User user)
+    {
+        return BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
+    }
+
+    public async Task<string?> CreateToken(User user)
+    {
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.Name, user.Username)
+        };
+
+        var key = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(_appSettings.JwtSecret));
+
+        var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+
+        var token = new JwtSecurityToken
+        (
+            claims: claims,
+            expires: DateTime.Now.AddDays(1),
+            signingCredentials: cred
+        );
+        var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+        return jwt;
     }
 }

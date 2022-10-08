@@ -1,5 +1,6 @@
 using System.Text;
 using Blog.Features;
+using Blog.Models;
 using Blog.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -7,11 +8,10 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 
-
 var builder = WebApplication.CreateBuilder(args);
 var config = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.local.json", optional: false, reloadOnChange: true)
+    .AddJsonFile("appsettings.json", false, true)
+    .AddJsonFile("appsettings.local.json", false, true)
     .AddEnvironmentVariables()
     .Build();
 var appSettings = config.GetSection("AppSettings").Get<AppSettings>();
@@ -19,11 +19,8 @@ var appSettings = config.GetSection("AppSettings").Get<AppSettings>();
 builder.Services.AddSingleton(appSettings);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddDbContextFactory<DataContext>(options =>
-{
-    options.UseNpgsql(appSettings.PostgresDsn);
-});
-builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddDbContextFactory<DataContext>(options => { options.UseNpgsql(appSettings.PostgresDsn); });
+builder.Services.AddScoped<IBlogService, BlogService>();
 
 builder.Services.AddSwaggerGen(options =>
 {

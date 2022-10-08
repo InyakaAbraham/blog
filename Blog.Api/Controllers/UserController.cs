@@ -3,7 +3,6 @@ using Blog.Features;
 using Blog.Models;
 using Blog.Persistence;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Api.Controllers;
 
@@ -11,47 +10,45 @@ namespace Blog.Api.Controllers;
 [ApiController]
 public class UserController : ControllerBase
 {
-    private readonly DataContext _dataContext;
-
-    private readonly IUserService _userService;
-
-    public UserController(DataContext dataContext, IUserService userService)
+    private readonly IBlogService _blogService;
+    
+    public UserController(IBlogService blogService)
     {
-        _userService = userService;
-        _dataContext = dataContext;
+        _blogService = blogService;
     }
 
     [HttpPost]
-    public async Task<ActionResult<User>> Register(UserDto userDto)
+    public async Task<ActionResult<User>> Register(RegisterUserRequest registerUserRequest)
     {
-        var passwordHash = _userService.CreatePasswordHash(userDto.Password);
-        var req = await _dataContext.Users.FirstOrDefaultAsync(x => x.Username == userDto.Username);
-        if (req == null)
+        var passwordHash = _blogService.CreatePasswordHash(registerUserRequest.Password);
+        var user = await _blogService.GetUserByEmailAddress(registerUserRequest.EmailAddress);
+        
+        if (user == null && user?.Username!=registerUserRequest.Username)
         {
-            var user = new User
+            var newUser = new User
             {
-                Username = userDto.Username,
+                EmailAddress = registerUserRequest.EmailAddress,
+                Username = registerUserRequest.Username,
                 PasswordHash = await passwordHash
             };
-            _dataContext.Users.Add(user);
-            await _dataContext.SaveChangesAsync();
-            return Ok(user);
+            await _blogService.CreateUser(newUser);
+            return Ok(newUser);
         }
 
-        return BadRequest("User with username already exist");
+        return BadRequest("User already exist");
     }
 
     [HttpPost]
-    public async Task<ActionResult<string>> Login(UserDto userDto)
+    public async Task<ActionResult<JwtDto>> Login(LoginUserRequest loginUserRequest)
     {
-        var user = await _dataContext.Users.FirstOrDefaultAsync(x => x.Username == userDto.Username);
+        var user = await _blogService.GetUserByEmailAddress(loginUserRequest.EmailAddress);
 
         if (user == null) return BadRequest("Wrong username/password");
-
-        if (_userService.VerifyPasswordHash(userDto.Password, user.PasswordHash) == false)
+        if (_blogService.VerifyPassword(loginUserRequest.Password, user) == false)
+        {
             return BadRequest("Wrong username/password");
-
-        var token = await _userService.CreateToken(user);
-        return Ok(token);
+        }
+        
+        return Ok(new JwtDto{AccessToken = await _blogService.CreateToken(user)});
     }
 }

@@ -6,7 +6,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Blog.Persistence.Migrations
 {
-    public partial class First : Migration
+    public partial class Initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -39,12 +39,15 @@ namespace Blog.Persistence.Migrations
                 name: "Users",
                 columns: table => new
                 {
+                    UserId = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Username = table.Column<string>(type: "text", nullable: false),
-                    PasswordHash = table.Column<string>(type: "text", nullable: false)
+                    EmailAddress = table.Column<string>(type: "text", nullable: false),
+                    PasswordHash = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Users", x => x.Username);
+                    table.PrimaryKey("PK_Users", x => x.UserId);
                 });
 
             migrationBuilder.CreateTable(
@@ -88,6 +91,18 @@ namespace Blog.Persistence.Migrations
                 name: "IX_BlogPosts_CategoryName",
                 table: "BlogPosts",
                 column: "CategoryName");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_EmailAddress",
+                table: "Users",
+                column: "EmailAddress",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Username",
+                table: "Users",
+                column: "Username",
+                unique: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

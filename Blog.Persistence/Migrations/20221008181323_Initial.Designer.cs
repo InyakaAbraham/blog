@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Blog.Persistence.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20221004101343_First")]
-    partial class First
+    [Migration("20221008181323_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -103,14 +103,30 @@ namespace Blog.Persistence.Migrations
 
             modelBuilder.Entity("Blog.Models.User", b =>
                 {
-                    b.Property<string>("Username")
-                        .HasColumnType("text");
+                    b.Property<long>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
 
-                    b.Property<string>("PasswordHash")
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("UserId"));
+
+                    b.Property<string>("EmailAddress")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("Username");
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("EmailAddress")
+                        .IsUnique();
+
+                    b.HasIndex("Username")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });
