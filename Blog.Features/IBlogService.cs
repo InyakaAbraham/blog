@@ -10,9 +10,10 @@ public interface IBlogService
     public Task<BlogPost?> AddPost(BlogPost newPost);
     public Task DeletePost(int id);
     public Task<BlogPost?> UpdatePost(BlogPost updatePost);
-    public Task<Author> AddAuthor(Author newAuthor);
+    public Task AddAuthor(Author newAuthor);
     public Task AddCategory(Category newCategory);
     public Task<User?> GetUserByEmailAddress(string userName);
+    public Task<User?> GetUserByUsername(string userName);
     public Task<Author?> GetAuthorById(int authorId);
     public Task<Category?> GetCategoryByName(string categoryName);
     public Task<User> CreateUser(User user);

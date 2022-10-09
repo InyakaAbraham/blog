@@ -21,18 +21,27 @@ public class UserController : ControllerBase
     {
         var passwordHash = _blogService.CreatePasswordHash(request.Password);
         var user = await _blogService.GetUserByEmailAddress(request.EmailAddress);
+        var username = await _blogService.GetUserByUsername(request.Username);
 
-        if (user != null || user?.Username == request.Username)
+        if (user != null || request.Username==username?.Username)
             return BadRequest("User already exist :(");
-
-        await _blogService.CreateUser(new User
+        if (request.Author==false)
         {
-            EmailAddress = request.EmailAddress,
-            Username = request.Username,
-            PasswordHash = await passwordHash
-        });
+            await _blogService.CreateUser(new User
+            {
+                EmailAddress = request.EmailAddress,
+                Username = request.Username,
+                PasswordHash = await passwordHash
+            });
+            return Ok("User Registration Successful:)");
+        }
 
-        return Ok("Registration Successful:)");
+        await _blogService.AddAuthor(new Author
+        {
+            Name = request.Username,
+            Description = request.Description,
+        });
+        return Ok("Author Registration Successful");
     }
 
     [HttpPost]

@@ -60,12 +60,6 @@ public class BlogController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<Author?>> AddAuthor(Author newAuthor)
-    {
-        return Ok(await _blogService.AddAuthor(newAuthor));
-    }
-
-    [HttpPost]
     public async Task<ActionResult> AddCategory(Category newCategory)
     {
         await _blogService.AddCategory(newCategory);

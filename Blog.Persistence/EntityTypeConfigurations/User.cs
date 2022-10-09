@@ -9,7 +9,6 @@ public class User : IEntityTypeConfiguration<Models.User>
     {
         builder.HasKey(u => u.UserId);
         builder.Property(u => u.Username).IsRequired();
-        builder.HasIndex(u => u.Username).IsUnique();
         builder.Property(u => u.EmailAddress).IsRequired();
         builder.HasIndex(u => u.EmailAddress).IsUnique();
     }

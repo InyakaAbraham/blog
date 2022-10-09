@@ -107,19 +107,16 @@ public class BlogService : IBlogService
         return null;
     }
 
-    public async Task<Author> AddAuthor(Author newAuthor)
+    public async Task AddAuthor(Author newAuthor)
     {
-        var post = await GetPostsByAuthor(newAuthor.AuthorId);
         var author = new Author
         {
             AuthorId = newAuthor.AuthorId,
             Name = newAuthor.Name,
             Description = newAuthor.Description,
-            BlogPosts = post
         };
         _dataContext.Authors.Add(author);
         await _dataContext.SaveChangesAsync();
-        return author;
     }
 
     public async Task AddCategory(Category newCategory)
@@ -140,6 +137,11 @@ public class BlogService : IBlogService
     public async Task<User?> GetUserByEmailAddress(string emailAddress)
     {
         return await _dataContext.Users.SingleOrDefaultAsync(u => u!.EmailAddress == emailAddress);
+    }
+
+    public async Task<User?> GetUserByUsername(string userName)
+    {
+        return await _dataContext.Users.SingleOrDefaultAsync(u => u!.Username == userName);
     }
 
     public async Task<Author?> GetAuthorById(int authorId)
