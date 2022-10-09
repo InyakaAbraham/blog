@@ -8,7 +8,7 @@ namespace Blog.Api.Controllers;
 
 [Route("api/[controller]/[action]")]
 [ApiController]
-// [Authorize]
+[Authorize]
 public class BlogController : ControllerBase
 {
     private readonly IBlogService _blogService;
@@ -58,13 +58,7 @@ public class BlogController : ControllerBase
         if (blogPost == null) return BadRequest("Kindly add a post in the valid format");
         return Ok(blogPost);
     }
-
-    [HttpPost]
-    public async Task<ActionResult> AddCategory(Category newCategory)
-    {
-        await _blogService.AddCategory(newCategory);
-        return Ok("Successful :)");
-    }
+    
 
     [HttpPut]
     public async Task<ActionResult<BlogPost>> UpdatePost(BlogPost updatePost)

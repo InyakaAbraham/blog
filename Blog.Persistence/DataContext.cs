@@ -16,7 +16,7 @@ public class DataContext : DbContext
 
     public DbSet<BlogPost?> BlogPosts { get; set; }
     public DbSet<Author> Authors { get; set; }
-    public DbSet<Category> Categories { get; set; }
+    public DbSet<Category?> Categories { get; set; }
     public DbSet<User?> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

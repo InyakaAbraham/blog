@@ -49,30 +49,29 @@ public class BlogService : IBlogService
 
     public async Task<BlogPost?> AddPost(BlogPost newPost)
     {
-        var author = await _dataContext.Authors
-            .Where(x => x.AuthorId == newPost.AuthorId)
-            .FirstOrDefaultAsync();
-        var category = await _dataContext.Categories
-            .Where(x => x.CategoryName.ToUpper()==newPost.CategoryName.ToUpper())
-            .FirstOrDefaultAsync();
+        var author = await GetAuthorById(newPost.AuthorId);
         var post = new BlogPost
-        {
-            Title = newPost.Title,
-            Summary = newPost.Summary,
-            Body = newPost.Body,
-            Author = author,
-            Tags = newPost.Tags,
-            AuthorId = newPost.AuthorId,
-            Category = category,
-            CategoryName = newPost.CategoryName,
-            Updated = newPost.Updated,
-            Created = DateTime.UtcNow
-        };
+            {
+                Title = newPost.Title,
+                Summary = newPost.Summary,
+                Body = newPost.Body,
+                Author = author,
+                Tags = newPost.Tags,
+                AuthorId = newPost.AuthorId,
+                Category = await AddCategory(new Category
+                {
+                    CategoryName = newPost.CategoryName
+                }),
+                CategoryName = newPost.CategoryName,
+                Updated = newPost.Updated,
+                Created = DateTime.UtcNow
+            };
 
-        _dataContext.BlogPosts.Add(post);
-        await _dataContext.SaveChangesAsync();
+            _dataContext.BlogPosts.Add(post);
+            await _dataContext.SaveChangesAsync();
 
-        return post;
+            return post;
+      
     }
 
     public async Task<BlogPost?> UpdatePost(BlogPost updatePost)
@@ -119,13 +118,20 @@ public class BlogService : IBlogService
         await _dataContext.SaveChangesAsync();
     }
 
-    public async Task AddCategory(Category newCategory)
+    public async Task<Category?> AddCategory(Category newCategory)
     {
-        _dataContext.Categories.Add(new Category
+        var category = await GetCategoryByName(newCategory.CategoryName);
+        if (category!=null)
+            return category;
+        
+        var cat = new Category
         {
             CategoryName = newCategory.CategoryName
-        });
+        };
+        _dataContext.Categories.Add(cat);
         await _dataContext.SaveChangesAsync();
+        return category;
+
     }
 
     public async Task DeletePost(int id)
@@ -154,8 +160,8 @@ public class BlogService : IBlogService
     public async Task<Category?> GetCategoryByName(string categoryName)
     {
         return await _dataContext.Categories
-            .Where(x => x.CategoryName.ToUpper()==categoryName.ToUpper())
-            .Include(x=>x.BlogPosts).SingleOrDefaultAsync();
+            .Where(x => x!.CategoryName.ToUpper()==categoryName.ToUpper())
+            .Include(x=>x!.BlogPosts).FirstOrDefaultAsync();
     }
 
     public async Task<User> CreateUser(User user)
