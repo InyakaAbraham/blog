@@ -136,7 +136,7 @@ public class BlogService : IBlogService
 
     public async Task DeletePost(int id)
     {
-        _dataContext.BlogPosts.Remove(await _dataContext.BlogPosts.FindAsync(id));
+        _dataContext.BlogPosts.Remove(await GetPostById(id));
         await _dataContext.SaveChangesAsync();
     }
 

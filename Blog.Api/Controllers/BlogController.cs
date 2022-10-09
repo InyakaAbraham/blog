@@ -81,8 +81,9 @@ public class BlogController : ControllerBase
     }
 
     [HttpDelete("id")]
-    public ActionResult<Task> DeletePost(int id)
+    public async Task<ActionResult> DeletePost(int id)
     {
-        return Ok(_blogService.DeletePost(id));
+        await _blogService.DeletePost(id);
+        return Ok("Deleted :(");
     }
 }
