@@ -8,7 +8,7 @@ namespace Blog.Api.Controllers;
 
 [Route("api/[controller]/[action]")]
 [ApiController]
-[Authorize]
+// [Authorize]
 public class BlogController : ControllerBase
 {
     private readonly IBlogService _blogService;
@@ -36,8 +36,7 @@ public class BlogController : ControllerBase
     [HttpGet("id")]
     public async Task<ActionResult<List<BlogPost>>> GetPostsByAuthor(int id)
     {
-        var blogPosts = await _blogService.GetPostsByAuthor(id);
-        return Ok(blogPosts);
+        return Ok(await _blogService.GetPostsByAuthor(id));
     }
 
     [HttpPost]

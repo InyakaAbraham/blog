@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Blog.Api.Dtos;
 
 public class NewPostDto
 {
-    [Required] public int PostId { get; set; }
+    [JsonIgnore][Required] public int PostId { get; set; }
 
     [Required] public string Title { get; set; }
 
@@ -18,6 +19,6 @@ public class NewPostDto
 
     [Required] public string CategoryName { get; set; }
 
-    public DateTime Created { get; init; }
-    public DateTime Updated { get; init; }
+    [JsonIgnore]public DateTime Created { get; init; }
+    [JsonIgnore]public DateTime Updated { get; init; }
 }
