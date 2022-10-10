@@ -5,19 +5,18 @@ namespace Blog.Features;
 public interface IBlogService
 {
     public Task<List<BlogPost?>> GetAllPosts();
-    public Task<BlogPost?> GetPostById(int id);
-    public Task<List<BlogPost?>> GetPostsByAuthor(int id);
+    public Task<BlogPost?> GetPostById(long id);
+    public Task<List<BlogPost?>> GetPostByTitle(string title);
+    public Task<List<BlogPost?>> GetPostByAuthor(long id);
     public Task<BlogPost?> AddPost(BlogPost newPost);
-    public Task DeletePost(int id);
     public Task<BlogPost?> UpdatePost(BlogPost updatePost);
-    public Task AddAuthor(Author newAuthor);
-    public Task<Category?> AddCategory(Category newCategory);
-    public Task<User?> GetUserByEmailAddress(string userName);
-    public Task<User?> GetUserByUsername(string userName);
-    public Task<Author?> GetAuthorById(int authorId);
+    public Task DeletePost(long id);
+    public Task<Author> CreateAuthor(Author author);
+    public Task<Author?> GetAuthorByEmailAddress(string userName);
+    public Task<Author?> GetAuthorByUsername(string userName);
+    public Task<Author?> GetAuthorById(long authorId);
     public Task<Category?> GetCategoryByName(string categoryName);
-    public Task<User> CreateUser(User user);
     public Task<string?> CreatePasswordHash(string password);
-    public bool VerifyPassword(string password, User user);
-    public Task<string> CreateToken(User user);
+    public bool VerifyPassword(string password, Author author);
+    public Task<string> CreateToken(Author author);
 }

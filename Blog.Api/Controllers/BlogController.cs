@@ -9,7 +9,7 @@ namespace Blog.Api.Controllers;
 [Route("api/[controller]/[action]")]
 [ApiController]
 [Authorize]
-public class BlogController : ControllerBase
+public class BlogController : AbstractController
 {
     private readonly IBlogService _blogService;
 
@@ -24,26 +24,38 @@ public class BlogController : ControllerBase
     {
         return Ok(await _blogService.GetAllPosts());
     }
-
+ 
+    [HttpGet]
+    [Attributes.Authorize(Role.Author)]
+    public async Task<List<BlogPost?>> GetPostByAuthor()
+    {
+        var userId = GetContextUserId();
+        return await _blogService.GetPostByAuthor(userId);
+    }
+    
     [HttpGet("id")]
-    public async Task<ActionResult<BlogPost>> GetPostById(int id)
+    [Attributes.Authorize(Role.Administrator, Role.Moderator)]
+    public async Task<ActionResult<BlogPost>> GetPostById(long id)
     {
         var blogPost = await _blogService.GetPostById(id);
         if (blogPost == null) return NotFound("Not Found");
         return Ok(blogPost);
     }
 
-    [HttpGet("id")]
-    public async Task<ActionResult<List<BlogPost>>> GetPostsByAuthor(int id)
+    [HttpGet("title")]
+    [AllowAnonymous]
+    public async Task<ActionResult<List<BlogPost>>> GetPostByTitle(string title)
     {
-        return Ok(await _blogService.GetPostsByAuthor(id));
+        return Ok(await _blogService.GetPostByTitle(title));
     }
 
     [HttpPost]
+    [Attributes.Authorize(Role.Author)]
     public async Task<ActionResult<BlogPost>> AddPost(NewPostDto newPost)
     {
         var author = await _blogService.GetAuthorById(newPost.AuthorId);
         var category = await _blogService.GetCategoryByName(newPost.CategoryName);
+        var authorId = GetContextUserId();
         var blogPost = await _blogService.AddPost(new BlogPost
         {
             Title = newPost.Title,
@@ -51,23 +63,22 @@ public class BlogController : ControllerBase
             Summary = newPost.Summary,
             Category = category,
             CategoryName = newPost.CategoryName,
-            AuthorId = newPost.AuthorId,
+            AuthorId = authorId,
             Tags = newPost.Tags,
             Author = author
         });
         if (blogPost == null) return BadRequest("Kindly add a post in the valid format");
         return Ok(blogPost);
     }
-    
+
 
     [HttpPut]
-    public async Task<ActionResult<BlogPost>> UpdatePost(BlogPost updatePost)
+    [Attributes.Authorize(Role.Administrator, Role.Moderator)]
+    public async Task<ActionResult<BlogPost>> UpdatePost(NewPostDto updatePost)
     {
-        var author = await _blogService.GetAuthorById(updatePost.PostId);
-        var category = await _blogService.GetCategoryByName(updatePost.CategoryName);
         var post = await _blogService.GetPostById(updatePost.PostId) ?? new BlogPost();
-        post.Author = author;
-        post.Category = category;
+        post.Author = post.Author;
+        post.Category = post.Category;
         post.Body = updatePost.Body;
         post.Summary = updatePost.Summary;
         post.Tags = updatePost.Tags;
@@ -81,7 +92,8 @@ public class BlogController : ControllerBase
     }
 
     [HttpDelete("id")]
-    public async Task<ActionResult> DeletePost(int id)
+    [Attributes.Authorize(Role.Administrator)]
+    public async Task<ActionResult> DeletePost(long id)
     {
         await _blogService.DeletePost(id);
         return Ok("Deleted :(");

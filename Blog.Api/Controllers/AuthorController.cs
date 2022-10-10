@@ -7,11 +7,11 @@ namespace Blog.Api.Controllers;
 
 [Route("api/[controller]/[action]")]
 [ApiController]
-public class UserController : AbstractController
+public class AuthorController : AbstractController
 {
     private readonly IBlogService _blogService;
 
-    public UserController(IBlogService blogService)
+    public AuthorController(IBlogService blogService)
     {
         _blogService = blogService;
     }

@@ -1,3 +1,3 @@
 # Blog Backend 
-Blog Backend with auth. 
+Blog Backend with jwt and role based auth. 
 

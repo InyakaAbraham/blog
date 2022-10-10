@@ -21,57 +21,60 @@ public class BlogService : IBlogService
 
     public async Task<List<BlogPost?>> GetAllPosts()
     {
-        return await _dataContext.BlogPosts.Include(x=>x!.Author)
-            .Include(x=>x!.Category)
+        return await _dataContext.BlogPosts.Include(x => x!.Author)
+            .Include(x => x!.Category)
             .ToListAsync();
     }
 
-    public async Task<BlogPost?> GetPostById(int id)
+    public async Task<BlogPost?> GetPostById(long id)
     {
         var post = await _dataContext.BlogPosts
-            .Where(x => x != null && x.PostId == id).Include(x=>x!.Author)
-            .Include(x=>x!.Category)
+            .Where(x => x != null && x.PostId == id).Include(x => x!.Author)
+            .Include(x => x!.Category)
             .FirstOrDefaultAsync();
 
         return post ?? null;
     }
 
-    public async Task<List<BlogPost?>> GetPostsByAuthor(int id)
+    public async Task<List<BlogPost?>> GetPostByTitle(string title)
     {
-        return await _dataContext.BlogPosts
-            .Where(x => x != null && x.AuthorId == id)
-            .Include(x=>x!.Category)
-            .Include(x=>x!.Author)
+        return await _dataContext.BlogPosts.Where(b => b != null && b.Title.Contains(title))
+            .Include(b => b.Author)
+            .Include(b => b.Category)
             .ToListAsync();
-        ;
     }
 
-
+    public async Task<List<BlogPost?>> GetPostByAuthor(long id)
+    {
+        return await _dataContext.BlogPosts.Where(b => b != null && b.AuthorId==id)
+            .Include(b => b.Author)
+            .Include(b => b.Category)
+            .ToListAsync();
+    }
     public async Task<BlogPost?> AddPost(BlogPost newPost)
     {
         var author = await GetAuthorById(newPost.AuthorId);
         var post = new BlogPost
+        {
+            Title = newPost.Title,
+            Summary = newPost.Summary,
+            Body = newPost.Body,
+            Author = author,
+            Tags = newPost.Tags,
+            AuthorId = newPost.AuthorId,
+            Category = await AddCategory(new Category
             {
-                Title = newPost.Title,
-                Summary = newPost.Summary,
-                Body = newPost.Body,
-                Author = author,
-                Tags = newPost.Tags,
-                AuthorId = newPost.AuthorId,
-                Category = await AddCategory(new Category
-                {
-                    CategoryName = newPost.CategoryName
-                }),
-                CategoryName = newPost.CategoryName,
-                Updated = newPost.Updated,
-                Created = DateTime.UtcNow
-            };
+                CategoryName = newPost.CategoryName
+            }),
+            CategoryName = newPost.CategoryName,
+            Updated = newPost.Updated,
+            Created = DateTime.UtcNow
+        };
 
-            _dataContext.BlogPosts.Add(post);
-            await _dataContext.SaveChangesAsync();
+        _dataContext.BlogPosts.Add(post);
+        await _dataContext.SaveChangesAsync();
 
-            return post;
-      
+        return post;
     }
 
     public async Task<BlogPost?> UpdatePost(BlogPost updatePost)
@@ -80,7 +83,7 @@ public class BlogService : IBlogService
             .Where(x => x.AuthorId == updatePost.AuthorId)
             .FirstOrDefaultAsync();
         var category = await _dataContext.Categories
-            .Where(x => x.CategoryName.ToUpper()==updatePost.CategoryName.ToUpper())
+            .Where(x => x.CategoryName.ToUpper() == updatePost.CategoryName.ToUpper())
             .FirstOrDefaultAsync();
         if (author == null) return null;
 
@@ -106,69 +109,42 @@ public class BlogService : IBlogService
         return null;
     }
 
-    public async Task AddAuthor(Author newAuthor)
-    {
-        var author = new Author
-        {
-            AuthorId = newAuthor.AuthorId,
-            Name = newAuthor.Name,
-            Description = newAuthor.Description,
-        };
-        _dataContext.Authors.Add(author);
-        await _dataContext.SaveChangesAsync();
-    }
-
-    public async Task<Category?> AddCategory(Category newCategory)
-    {
-        var category = await GetCategoryByName(newCategory.CategoryName);
-        if (category!=null)
-            return category;
-        
-        var cat = new Category
-        {
-            CategoryName = newCategory.CategoryName
-        };
-        _dataContext.Categories.Add(cat);
-        await _dataContext.SaveChangesAsync();
-        return category;
-
-    }
-
-    public async Task DeletePost(int id)
+    public async Task DeletePost(long id)
     {
         _dataContext.BlogPosts.Remove(await GetPostById(id));
         await _dataContext.SaveChangesAsync();
     }
 
-    public async Task<User?> GetUserByEmailAddress(string emailAddress)
+
+    public async Task<Author?> GetAuthorByEmailAddress(string emailAddress)
     {
-        return await _dataContext.Users.SingleOrDefaultAsync(u => u!.EmailAddress == emailAddress);
+        return await _dataContext.Authors.SingleOrDefaultAsync(u => u!.EmailAddress == emailAddress);
     }
 
-    public async Task<User?> GetUserByUsername(string userName)
+    public async Task<Author?> GetAuthorByUsername(string userName)
     {
-        return await _dataContext.Users.SingleOrDefaultAsync(u => u!.Username == userName);
+        return await _dataContext.Authors.SingleOrDefaultAsync(u => u!.Username == userName);
     }
 
-    public async Task<Author?> GetAuthorById(int authorId)
+    public async Task<Author?> GetAuthorById(long authorId)
     {
         return await _dataContext.Authors.Where(a => a.AuthorId == authorId)
-            .Include(a=>a.BlogPosts)
+            .Include(a => a.BlogPosts)
             .SingleOrDefaultAsync();
     }
 
     public async Task<Category?> GetCategoryByName(string categoryName)
     {
         return await _dataContext.Categories
-            .Where(x => x!.CategoryName.ToUpper()==categoryName.ToUpper())
-            .Include(x=>x!.BlogPosts).FirstOrDefaultAsync();
+            .Where(x => x!.CategoryName.ToUpper() == categoryName.ToUpper())
+            .Include(x => x!.BlogPosts).FirstOrDefaultAsync();
     }
 
-    public async Task<User> CreateUser(User user)
+    public async Task<Author> CreateAuthor(Author author)
     {
-        _dataContext.Users.Add(user);
+        _dataContext.Authors.Add(author);
         await _dataContext.SaveChangesAsync();
-        return user;
+        return author;
     }
 
     public async Task<string?> CreatePasswordHash(string password)
@@ -176,31 +152,40 @@ public class BlogService : IBlogService
         return await Task.FromResult(BCrypt.Net.BCrypt.HashPassword(password));
     }
 
-
-    public bool VerifyPassword(string password, User user)
+    public bool VerifyPassword(string password, Author author)
     {
-        return BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
+        return BCrypt.Net.BCrypt.Verify(password, author.PasswordHash);
     }
 
-    public Task<string> CreateToken(User user)
+    public Task<string> CreateToken(Author author)
     {
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.Name, user.Username)
-        };
-
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_appSettings.JwtSecret));
-
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appSettings.JwtSecret));
         var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+        var claims = new List<Claim> { new("sub", author.AuthorId.ToString()), new("role", "Default") };
 
-        var token = new JwtSecurityToken
-        (
-            claims: claims,
-            expires: DateTime.Now.AddDays(1),
-            signingCredentials: cred
-        );
-        var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-        return Task.FromResult(jwt);
+        claims.AddRange(author.Roles.Select(role => new Claim("role", role.ToString())));
+
+        return Task.FromResult(new JwtSecurityTokenHandler().WriteToken(
+            new JwtSecurityToken
+            (
+                claims: claims,
+                expires: DateTime.Now.AddDays(1),
+                signingCredentials: cred
+            )));
+    }
+
+    public async Task<Category?> AddCategory(Category newCategory)
+    {
+        var category = await GetCategoryByName(newCategory.CategoryName);
+        if (category != null)
+            return category;
+
+        var cat = new Category
+        {
+            CategoryName = newCategory.CategoryName
+        };
+        _dataContext.Categories.Add(cat);
+        await _dataContext.SaveChangesAsync();
+        return category;
     }
 }

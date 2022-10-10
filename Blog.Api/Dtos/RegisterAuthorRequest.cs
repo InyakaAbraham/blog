@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Blog.Api.Dtos;
 
-public class RegisterUserRequest
+public class RegisterAuthorRequest
 {
     [Required] [EmailAddress] public string EmailAddress { get; set; }
 
@@ -10,6 +10,6 @@ public class RegisterUserRequest
 
     [MinLength(8, ErrorMessage = "Password must be at least 8 characters")]
     public string Password { get; set; }
-    [Required]
-    public string Description { get; set; }
+
+    [Required] public string Description { get; set; }
 }

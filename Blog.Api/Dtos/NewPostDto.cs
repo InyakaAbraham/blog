@@ -5,7 +5,7 @@ namespace Blog.Api.Dtos;
 
 public class NewPostDto
 {
-    [JsonIgnore][Required] public int PostId { get; set; }
+    [Required] public int PostId { get; set; }
 
     [Required] public string Title { get; set; }
 
@@ -15,10 +15,10 @@ public class NewPostDto
 
     [Required] public string[]? Tags { get; set; }
 
-    [Required] public int AuthorId { get; set; }
+    [JsonIgnore] [Required] public int AuthorId { get; set; }
 
     [Required] public string CategoryName { get; set; }
 
-    [JsonIgnore]public DateTime Created { get; init; }
-    [JsonIgnore]public DateTime Updated { get; init; }
+    [JsonIgnore] public DateTime Created { get; init; }
+    [JsonIgnore] public DateTime Updated { get; init; }
 }
