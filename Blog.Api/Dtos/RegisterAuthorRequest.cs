@@ -12,5 +12,4 @@ public class RegisterUserRequest
     public string Password { get; set; }
     [Required]
     public string Description { get; set; }
-    [Required] public bool Author { get; set; }
 }

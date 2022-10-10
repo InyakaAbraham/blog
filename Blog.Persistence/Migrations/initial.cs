@@ -5,7 +5,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Blog.Persistence.Migrations;
 
-public partial class Initial : Migration
+public partial class initial : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)
     {
@@ -13,11 +13,14 @@ public partial class Initial : Migration
             "Authors",
             table => new
             {
-                AuthorId = table.Column<int>("integer", nullable: false)
+                AuthorId = table.Column<long>("bigint", nullable: false)
                     .Annotation("Npgsql:ValueGenerationStrategy",
                         NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                Name = table.Column<string>("text", nullable: false),
-                Description = table.Column<string>("text", nullable: false)
+                Username = table.Column<string>("text", nullable: false),
+                EmailAddress = table.Column<string>("text", nullable: false),
+                Description = table.Column<string>("text", nullable: false),
+                PasswordHash = table.Column<string>("text", nullable: true),
+                Roles = table.Column<int[]>("integer[]", nullable: false)
             },
             constraints: table => { table.PrimaryKey("PK_Authors", x => x.AuthorId); });
 
@@ -30,23 +33,10 @@ public partial class Initial : Migration
             constraints: table => { table.PrimaryKey("PK_Categories", x => x.CategoryName); });
 
         migrationBuilder.CreateTable(
-            "Users",
-            table => new
-            {
-                UserId = table.Column<long>("bigint", nullable: false)
-                    .Annotation("Npgsql:ValueGenerationStrategy",
-                        NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                Username = table.Column<string>("text", nullable: false),
-                EmailAddress = table.Column<string>("text", nullable: false),
-                PasswordHash = table.Column<string>("text", nullable: true)
-            },
-            constraints: table => { table.PrimaryKey("PK_Users", x => x.UserId); });
-
-        migrationBuilder.CreateTable(
             "BlogPosts",
             table => new
             {
-                PostId = table.Column<int>("integer", nullable: false)
+                PostId = table.Column<long>("bigint", nullable: false)
                     .Annotation("Npgsql:ValueGenerationStrategy",
                         NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                 Title = table.Column<string>("text", nullable: false),
@@ -54,7 +44,7 @@ public partial class Initial : Migration
                 Body = table.Column<string>("text", nullable: false),
                 Tags = table.Column<string[]>("text[]", nullable: false),
                 CategoryName = table.Column<string>("text", nullable: false),
-                AuthorId = table.Column<int>("integer", nullable: false),
+                AuthorId = table.Column<long>("bigint", nullable: false),
                 Created = table.Column<DateTime>("timestamp with time zone", nullable: false),
                 Updated = table.Column<DateTime>("timestamp with time zone", nullable: false)
             },
@@ -76,6 +66,12 @@ public partial class Initial : Migration
             });
 
         migrationBuilder.CreateIndex(
+            "IX_Authors_EmailAddress",
+            "Authors",
+            "EmailAddress",
+            unique: true);
+
+        migrationBuilder.CreateIndex(
             "IX_BlogPosts_AuthorId",
             "BlogPosts",
             "AuthorId");
@@ -84,27 +80,12 @@ public partial class Initial : Migration
             "IX_BlogPosts_CategoryName",
             "BlogPosts",
             "CategoryName");
-
-        migrationBuilder.CreateIndex(
-            "IX_Users_EmailAddress",
-            "Users",
-            "EmailAddress",
-            unique: true);
-
-        migrationBuilder.CreateIndex(
-            "IX_Users_Username",
-            "Users",
-            "Username",
-            unique: true);
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.DropTable(
             "BlogPosts");
-
-        migrationBuilder.DropTable(
-            "Users");
 
         migrationBuilder.DropTable(
             "Authors");
