@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Blog.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,12 +19,13 @@ public class AuthorizeAttribute : Attribute, IAuthorizationFilter
 
     public void OnAuthorization(AuthorizationFilterContext context)
     {
+        var debug = context.HttpContext.User.Claims;
         var allowAnonymous = context.ActionDescriptor.EndpointMetadata.OfType<AllowAnonymousAttribute>().Any();
 
         if (allowAnonymous) return;
 
         var parsedRoles = context.HttpContext.User.Claims
-            .Where(x => x.Type == ClaimTypes.Role)
+            .Where(x => x.Type == "role")
             .Select(y => Enum.Parse<UserRole>(y.Value))
             .ToList();
 
