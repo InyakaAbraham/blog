@@ -8,8 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Blog.Api.Controllers;
 
 [Route("api/[controller]/[action]")]
-[ApiController]
-[Authorize]
+[Attributes.Authorize(UserRole.Default)]
 public class BlogController : AbstractController
 {
     private readonly IBlogService _blogService;

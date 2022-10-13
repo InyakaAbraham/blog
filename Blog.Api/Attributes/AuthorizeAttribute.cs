@@ -9,11 +9,13 @@ namespace Blog.Api.Attributes;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
 public class AuthorizeAttribute : Attribute, IAuthorizationFilter
 {
-    private readonly IList<UserRole> _roles;
+    private readonly List<UserRole> _roles;
 
-    public AuthorizeAttribute(params UserRole[] roles)
+    public AuthorizeAttribute(UserRole firstRole, params UserRole[] otherRoles)
     {
-        _roles = roles;
+        _roles = new List<UserRole>();
+        _roles.Add(firstRole);
+        _roles.AddRange(otherRoles);
     }
 
     public void OnAuthorization(AuthorizationFilterContext context)
