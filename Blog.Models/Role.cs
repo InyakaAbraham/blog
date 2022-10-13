@@ -1,9 +1,9 @@
+using Blog.Models.Enums;
+
 namespace Blog.Models;
 
-public enum Role
+public class Role
 {
-    Default,
-    Author,
-    Moderator,
-    Administrator
+    public UserRole Id { get; set; }
+    public List<Author> Authors { get; set; }
 }

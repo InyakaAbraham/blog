@@ -24,17 +24,16 @@ public class AuthorController : AbstractController
         var username = await _blogService.GetAuthorByUsername(registerAuthorRequest.Username);
 
         if (user != null || registerAuthorRequest.Username == username?.Username)
-            return BadRequest("User already exist :(");
+            return BadRequest(new { error = "User already exist :(" });
 
-        await _blogService.CreateAuthor(new Author
+        await _blogService.CreateUser(new Author
         {
             EmailAddress = registerAuthorRequest.EmailAddress,
             Username = registerAuthorRequest.Username,
             Description = registerAuthorRequest.Description,
-            PasswordHash = await passwordHash,
-            Roles = new List<Role> { Role.Author }
+            PasswordHash = await passwordHash
         });
-        return Ok("User Registration Successful:)");
+        return Ok(new { result = "Registration Successful :)" });
     }
 
     [HttpPost]
@@ -42,9 +41,9 @@ public class AuthorController : AbstractController
     {
         var author = await _blogService.GetAuthorByEmailAddress(loginAuthorRequest.EmailAddress);
 
-        if (author == null) return BadRequest("Wrong username/password");
+        if (author == null) return BadRequest(new { error = "Wrong username/password :/" });
         if (_blogService.VerifyPassword(loginAuthorRequest.Password, author) == false)
-            return BadRequest("Wrong username/password");
+            return BadRequest(new { error = "Wrong username/password :/" });
 
         return Ok(new JwtDto { AccessToken = await _blogService.CreateToken(author) });
     }

@@ -10,5 +10,5 @@ public class Author
     [JsonIgnore] public string EmailAddress { get; set; }
     [JsonIgnore] public string? PasswordHash { get; set; }
     [JsonIgnore] public List<Role> Roles { get; set; }
-    [JsonIgnore] public List<BlogPost?> BlogPosts { get; set; }
+    [JsonIgnore] public List<BlogPost> BlogPosts { get; set; }
 }

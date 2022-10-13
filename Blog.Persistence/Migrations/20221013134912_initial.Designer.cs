@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Blog.Persistence.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20221010145745_initial")]
+    [Migration("20221013134912_initial")]
     partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -23,6 +23,21 @@ namespace Blog.Persistence.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("AuthorRole", b =>
+                {
+                    b.Property<long>("AuthorsAuthorId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("RolesId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("AuthorsAuthorId", "RolesId");
+
+                    b.HasIndex("RolesId");
+
+                    b.ToTable("AuthorRole");
+                });
 
             modelBuilder.Entity("Blog.Models.Author", b =>
                 {
@@ -42,10 +57,6 @@ namespace Blog.Persistence.Migrations
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("text");
-
-                    b.Property<int[]>("Roles")
-                        .IsRequired()
-                        .HasColumnType("integer[]");
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -113,6 +124,45 @@ namespace Blog.Persistence.Migrations
                     b.HasKey("CategoryName");
 
                     b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("Blog.Models.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1
+                        },
+                        new
+                        {
+                            Id = 2
+                        },
+                        new
+                        {
+                            Id = 3
+                        });
+                });
+
+            modelBuilder.Entity("AuthorRole", b =>
+                {
+                    b.HasOne("Blog.Models.Author", null)
+                        .WithMany()
+                        .HasForeignKey("AuthorsAuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Blog.Models.Role", null)
+                        .WithMany()
+                        .HasForeignKey("RolesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Blog.Models.BlogPost", b =>

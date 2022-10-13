@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Blog.Models;
+using Blog.Models.Enums;
 using Blog.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -19,7 +20,7 @@ public class BlogService : IBlogService
         _appSettings = appSettings;
     }
 
-    public async Task<List<BlogPost?>> GetAllPosts()
+    public async Task<List<BlogPost>> GetAllPosts()
     {
         return await _dataContext.BlogPosts.Include(x => x!.Author)
             .Include(x => x!.Category)
@@ -29,28 +30,29 @@ public class BlogService : IBlogService
     public async Task<BlogPost?> GetPostById(long id)
     {
         var post = await _dataContext.BlogPosts
-            .Where(x => x != null && x.PostId == id).Include(x => x!.Author)
+            .Where(x => x.PostId == id).Include(x => x!.Author)
             .Include(x => x!.Category)
             .FirstOrDefaultAsync();
 
         return post ?? null;
     }
 
-    public async Task<List<BlogPost?>> GetPostByTitle(string title)
+    public async Task<List<BlogPost>> GetPostByTitle(string title)
     {
-        return await _dataContext.BlogPosts.Where(b => b != null && b.Title.Contains(title))
+        return await _dataContext.BlogPosts.Where(b => b.Title.Contains(title))
             .Include(b => b.Author)
             .Include(b => b.Category)
             .ToListAsync();
     }
 
-    public async Task<List<BlogPost?>> GetPostByAuthor(long id)
+    public async Task<List<BlogPost>> GetPostByAuthor(long id)
     {
-        return await _dataContext.BlogPosts.Where(b => b != null && b.AuthorId==id)
+        return await _dataContext.BlogPosts.Where(b => b.AuthorId == id)
             .Include(b => b.Author)
             .Include(b => b.Category)
             .ToListAsync();
     }
+
     public async Task<BlogPost?> AddPost(BlogPost newPost)
     {
         var author = await GetAuthorById(newPost.AuthorId);
@@ -111,14 +113,15 @@ public class BlogService : IBlogService
 
     public async Task DeletePost(long id)
     {
-        _dataContext.BlogPosts.Remove(await GetPostById(id));
+        _dataContext.BlogPosts.Remove((await GetPostById(id))!);
         await _dataContext.SaveChangesAsync();
     }
 
 
     public async Task<Author?> GetAuthorByEmailAddress(string emailAddress)
     {
-        return await _dataContext.Authors.SingleOrDefaultAsync(u => u!.EmailAddress == emailAddress);
+        return await _dataContext.Authors.Include(x => x.Roles)
+            .SingleOrDefaultAsync(y => y!.EmailAddress == emailAddress);
     }
 
     public async Task<Author?> GetAuthorByUsername(string userName)
@@ -140,8 +143,10 @@ public class BlogService : IBlogService
             .Include(x => x!.BlogPosts).FirstOrDefaultAsync();
     }
 
-    public async Task<Author> CreateAuthor(Author author)
+    public async Task<Author> CreateUser(Author author)
     {
+        author.Roles = new List<Role?>
+            { await _dataContext.Roles.SingleOrDefaultAsync(x => x.Id == UserRole.Author) };
         _dataContext.Authors.Add(author);
         await _dataContext.SaveChangesAsync();
         return author;
@@ -161,9 +166,10 @@ public class BlogService : IBlogService
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appSettings.JwtSecret));
         var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-        var claims = new List<Claim> { new("sub", author.AuthorId.ToString()), new("role", "Default") };
+        var claims = new List<Claim>
+            { new("sub", author.AuthorId.ToString()), new("role", UserRole.Default.ToString()) };
 
-        claims.AddRange(author.Roles.Select(role => new Claim("role", role.ToString())));
+        claims.AddRange(author.Roles.Select(role => new Claim("role", role.Id.ToString())));
 
         return Task.FromResult(new JwtSecurityTokenHandler().WriteToken(
             new JwtSecurityToken
