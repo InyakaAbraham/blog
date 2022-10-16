@@ -5,7 +5,7 @@ namespace Blog.Features;
 
 public interface IBlogService
 {
-    public Task<List<BlogPost>> GetAllPosts(BlogParameters blogParameters);
+    public Task<PagedList<BlogPost>> GetAllPosts(BlogParameters blogParameters);
     public Task<BlogPost?> GetPostById(long id);
     public Task<List<BlogPost>> GetPostByTitle(string title, BlogParameters blogParameters);
     public Task<List<BlogPost>> GetPostByAuthor(long id, BlogParameters blogParameters);

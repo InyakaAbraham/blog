@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Blog.Api.Dtos;
 using Blog.Features;
 using Blog.Models;
@@ -23,7 +24,17 @@ public class BlogController : AbstractController
     [AllowAnonymous]
     public async Task<ActionResult<List<BlogPost>>> GetAllPosts([FromQuery] BlogParameters blogParameters)
     {
-        return Ok(await _blogService.GetAllPosts(blogParameters));
+        var post = await _blogService.GetAllPosts(blogParameters);
+        var metadata = new
+        {
+            post.TotalCount,
+            post.CurrentPage,
+            post.PageSize,
+            post.HasNext,
+            post.HasPrevious
+        };
+        Response.Headers.Add("X-Pagination",metadata.ToString());
+        return Ok(post);
     }
 
     [HttpGet]

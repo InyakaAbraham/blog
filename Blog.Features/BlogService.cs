@@ -21,14 +21,13 @@ public class BlogService : IBlogService
         _appSettings = appSettings;
     }
 
-    public async Task<List<BlogPost>> GetAllPosts(BlogParameters blogParameters)
+    public async Task<PagedList<BlogPost>> GetAllPosts(BlogParameters blogParameters)
     {
-        return await _dataContext.BlogPosts.Include(x => x.Author)
+        var post = await _dataContext.BlogPosts.Include(x => x.Author)
             .Include(x => x.Category)
-            .OrderBy(x => x.PostId)
-            .Skip((blogParameters.PageNumber - 1) * blogParameters.PageSize)
-            .Take(blogParameters.PageSize)
+            .OrderBy(x=>x.PostId)
             .ToListAsync();
+        return await PagedList<BlogPost>.ToPagedList(post,blogParameters.PageNumber,blogParameters.PageSize);
     }
 
     public async Task<BlogPost?> GetPostById(long id)
