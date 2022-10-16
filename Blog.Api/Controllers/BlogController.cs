@@ -28,10 +28,10 @@ public class BlogController : AbstractController
 
     [HttpGet]
     [Attributes.Authorize(UserRole.Author)]
-    public async Task<List<BlogPost>> GetPostByAuthor()
+    public async Task<List<BlogPost>> GetPostByAuthor([FromQuery] BlogParameters blogParameters)
     {
         var userId = GetContextUserId();
-        return await _blogService.GetPostByAuthor(userId);
+        return await _blogService.GetPostByAuthor(userId, blogParameters);
     }
 
     [HttpGet("id")]
@@ -45,9 +45,10 @@ public class BlogController : AbstractController
 
     [HttpGet("title")]
     [AllowAnonymous]
-    public async Task<ActionResult<List<BlogPost>>> GetPostByTitle(string title)
+    public async Task<ActionResult<List<BlogPost>>> GetPostByTitle(string title,
+        [FromQuery] BlogParameters blogParameters)
     {
-        return Ok(await _blogService.GetPostByTitle(title));
+        return Ok(await _blogService.GetPostByTitle(title, blogParameters));
     }
 
     [HttpPost]

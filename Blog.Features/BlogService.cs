@@ -23,10 +23,10 @@ public class BlogService : IBlogService
 
     public async Task<List<BlogPost>> GetAllPosts(BlogParameters blogParameters)
     {
-        return await _dataContext.BlogPosts.Include(x=>x.Author)
-            .Include(x=>x.Category)
-            .OrderBy(x=>x.PostId)
-            .Skip((blogParameters.PageNumber-1)*blogParameters.PageSize)
+        return await _dataContext.BlogPosts.Include(x => x.Author)
+            .Include(x => x.Category)
+            .OrderBy(x => x.PostId)
+            .Skip((blogParameters.PageNumber - 1) * blogParameters.PageSize)
             .Take(blogParameters.PageSize)
             .ToListAsync();
     }
@@ -41,19 +41,25 @@ public class BlogService : IBlogService
         return post ?? null;
     }
 
-    public async Task<List<BlogPost>> GetPostByTitle(string title)
+    public async Task<List<BlogPost>> GetPostByTitle(string title, BlogParameters blogParameters)
     {
         return await _dataContext.BlogPosts.Where(b => b.Title.Contains(title))
             .Include(b => b.Author)
             .Include(b => b.Category)
+            .OrderBy(x => x.PostId)
+            .Skip((blogParameters.PageNumber - 1) * blogParameters.PageSize)
+            .Take(blogParameters.PageSize)
             .ToListAsync();
     }
 
-    public async Task<List<BlogPost>> GetPostByAuthor(long id)
+    public async Task<List<BlogPost>> GetPostByAuthor(long id,BlogParameters blogParameters)
     {
         return await _dataContext.BlogPosts.Where(b => b.AuthorId == id)
             .Include(b => b.Author)
             .Include(b => b.Category)
+            .OrderBy(x => x.PostId)
+            .Skip((blogParameters.PageNumber - 1) * blogParameters.PageSize)
+            .Take(blogParameters.PageSize)
             .ToListAsync();
     }
 
