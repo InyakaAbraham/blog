@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Blog.Models;
 using Blog.Models.Enums;
+using Blog.Models.Helper;
 using Blog.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -20,10 +21,13 @@ public class BlogService : IBlogService
         _appSettings = appSettings;
     }
 
-    public async Task<List<BlogPost>> GetAllPosts()
+    public async Task<List<BlogPost>> GetAllPosts(BlogParameters blogParameters)
     {
-        return await _dataContext.BlogPosts.Include(x => x!.Author)
-            .Include(x => x!.Category)
+        return await _dataContext.BlogPosts.Include(x=>x.Author)
+            .Include(x=>x.Category)
+            .OrderBy(x=>x.PostId)
+            .Skip((blogParameters.PageNumber-1)*blogParameters.PageSize)
+            .Take(blogParameters.PageSize)
             .ToListAsync();
     }
 

@@ -1,10 +1,11 @@
 using Blog.Models;
+using Blog.Models.Helper;
 
 namespace Blog.Features;
 
 public interface IBlogService
 {
-    public Task<List<BlogPost>> GetAllPosts();
+    public Task<List<BlogPost>> GetAllPosts(BlogParameters blogParameters);
     public Task<BlogPost?> GetPostById(long id);
     public Task<List<BlogPost>> GetPostByTitle(string title);
     public Task<List<BlogPost>> GetPostByAuthor(long id);

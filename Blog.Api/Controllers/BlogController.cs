@@ -2,6 +2,7 @@ using Blog.Api.Dtos;
 using Blog.Features;
 using Blog.Models;
 using Blog.Models.Enums;
+using Blog.Models.Helper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,9 +21,9 @@ public class BlogController : AbstractController
 
     [HttpGet]
     [AllowAnonymous]
-    public async Task<ActionResult<List<BlogPost>>> GetAllPosts()
+    public async Task<ActionResult<List<BlogPost>>> GetAllPosts([FromQuery] BlogParameters blogParameters)
     {
-        return Ok(await _blogService.GetAllPosts());
+        return Ok(await _blogService.GetAllPosts(blogParameters));
     }
 
     [HttpGet]
