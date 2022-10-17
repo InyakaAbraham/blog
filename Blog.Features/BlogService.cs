@@ -21,13 +21,13 @@ public class BlogService : IBlogService
         _appSettings = appSettings;
     }
 
-    public async Task<PagedList<BlogPost>> GetAllPosts(BlogParameters blogParameters)
+    public async Task<PagedList<BlogPost>> GetAllPosts(PageParameters pageParameters)
     {
         var post = await _dataContext.BlogPosts.Include(x => x.Author)
             .Include(x => x.Category)
             .OrderBy(x=>x.PostId)
             .ToListAsync();
-        return await PagedList<BlogPost>.ToPagedList(post,blogParameters.PageNumber,blogParameters.PageSize);
+        return await PagedList<BlogPost>.ToPagedList(post,pageParameters.PageNumber,pageParameters.PageSize);
     }
 
     public async Task<BlogPost?> GetPostById(long id)
@@ -40,25 +40,25 @@ public class BlogService : IBlogService
         return post ?? null;
     }
 
-    public async Task<List<BlogPost>> GetPostByTitle(string title, BlogParameters blogParameters)
+    public async Task<List<BlogPost>> GetPostByTitle(string title, PageParameters pageParameters)
     {
         return await _dataContext.BlogPosts.Where(b => b.Title.Contains(title))
             .Include(b => b.Author)
             .Include(b => b.Category)
             .OrderBy(x => x.PostId)
-            .Skip((blogParameters.PageNumber - 1) * blogParameters.PageSize)
-            .Take(blogParameters.PageSize)
+            .Skip((pageParameters.PageNumber - 1) * pageParameters.PageSize)
+            .Take(pageParameters.PageSize)
             .ToListAsync();
     }
 
-    public async Task<List<BlogPost>> GetPostByAuthor(long id,BlogParameters blogParameters)
+    public async Task<List<BlogPost>> GetPostByAuthor(long id,PageParameters pageParameters)
     {
         return await _dataContext.BlogPosts.Where(b => b.AuthorId == id)
             .Include(b => b.Author)
             .Include(b => b.Category)
             .OrderBy(x => x.PostId)
-            .Skip((blogParameters.PageNumber - 1) * blogParameters.PageSize)
-            .Take(blogParameters.PageSize)
+            .Skip((pageParameters.PageNumber - 1) * pageParameters.PageSize)
+            .Take(pageParameters.PageSize)
             .ToListAsync();
     }
 

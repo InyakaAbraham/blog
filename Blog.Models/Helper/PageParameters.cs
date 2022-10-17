@@ -1,6 +1,6 @@
 namespace Blog.Models.Helper;
 
-public class BlogParameters
+public class PageParameters
 {
      private const int MaxPageSize = 50;
      public int PageNumber { get; set; } = 1;

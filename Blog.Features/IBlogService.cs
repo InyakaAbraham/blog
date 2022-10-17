@@ -5,10 +5,10 @@ namespace Blog.Features;
 
 public interface IBlogService
 {
-    public Task<PagedList<BlogPost>> GetAllPosts(BlogParameters blogParameters);
+    public Task<PagedList<BlogPost>> GetAllPosts(PageParameters pageParameters);
     public Task<BlogPost?> GetPostById(long id);
-    public Task<List<BlogPost>> GetPostByTitle(string title, BlogParameters blogParameters);
-    public Task<List<BlogPost>> GetPostByAuthor(long id, BlogParameters blogParameters);
+    public Task<List<BlogPost>> GetPostByTitle(string title, PageParameters pageParameters);
+    public Task<List<BlogPost>> GetPostByAuthor(long id, PageParameters pageParameters);
     public Task<BlogPost?> AddPost(BlogPost newPost);
     public Task<BlogPost?> UpdatePost(BlogPost updatePost);
     public Task DeletePost(long id);
