@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+using System.Text.Json;
 using Blog.Api.Dtos;
 using Blog.Features;
 using Blog.Models;
@@ -33,7 +33,7 @@ public class BlogController : AbstractController
             post.HasNext,
             post.HasPrevious
         };
-        Response.Headers.Add("X-Pagination",metadata.ToString());
+        Response.Headers.Add("Page-Information", JsonSerializer.Serialize(metadata));
         return Ok(post);
     }
 
