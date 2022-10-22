@@ -2,8 +2,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Blog.Models;
-using Blog.Models.Enums;
-using Blog.Models.Helper;
 using Blog.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -35,31 +33,30 @@ public class BlogService : IBlogService
         var post = await _dataContext.BlogPosts
             .Where(x => x.PostId == id).Include(x => x!.Author)
             .Include(x => x!.Category)
+            .OrderBy(x=>x.PostId)
             .FirstOrDefaultAsync();
 
         return post ?? null;
     }
 
-    public async Task<List<BlogPost>> GetPostByTitle(string title, PageParameters pageParameters)
+    public async Task<PagedList<BlogPost>> GetPostByTitle(string title, PageParameters pageParameters)
     {
-        return await _dataContext.BlogPosts.Where(b => b.Title.Contains(title))
+        var post = await _dataContext.BlogPosts.Where(b => b.Title.Contains(title))
             .Include(b => b.Author)
             .Include(b => b.Category)
-            .OrderBy(x => x.PostId)
-            .Skip((pageParameters.PageNumber - 1) * pageParameters.PageSize)
-            .Take(pageParameters.PageSize)
-            .ToListAsync();
+            .OrderBy(x => x.PostId).ToListAsync();
+        return await PagedList<BlogPost>.ToPagedList(post, pageParameters.PageNumber, pageParameters.PageSize);
     }
 
-    public async Task<List<BlogPost>> GetPostByAuthor(long id,PageParameters pageParameters)
+    public async Task<PagedList<BlogPost>> GetPostByAuthor(long id,PageParameters pageParameters)
     {
-        return await _dataContext.BlogPosts.Where(b => b.AuthorId == id)
-            .Include(b => b.Author)
-            .Include(b => b.Category)
-            .OrderBy(x => x.PostId)
-            .Skip((pageParameters.PageNumber - 1) * pageParameters.PageSize)
-            .Take(pageParameters.PageSize)
+        var post = await _dataContext.BlogPosts
+            .Where(x => x.AuthorId == id).Include(x => x.Author)
+            .Include(x=>x.Category)
+            .OrderBy(x=>x.Title)
             .ToListAsync();
+        return await PagedList<BlogPost>.ToPagedList(post, pageParameters.PageNumber, pageParameters.PageSize);
+
     }
 
     public async Task<BlogPost?> AddPost(BlogPost newPost)

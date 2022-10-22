@@ -1,4 +1,4 @@
-namespace Blog.Models.Enums;
+namespace Blog.Models;
 
 public enum UserRole
 {

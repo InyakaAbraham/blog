@@ -1,4 +1,4 @@
-namespace Blog.Models.Helper;
+namespace Blog.Models;
 
 public class PageParameters
 {
