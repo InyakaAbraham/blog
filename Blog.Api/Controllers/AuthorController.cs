@@ -1,12 +1,14 @@
 using Blog.Api.Dtos;
 using Blog.Features;
 using Blog.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Blog.Api.Controllers;
 
 [Route("api/[controller]/[action]")]
 [ApiController]
+[AllowAnonymous]
 public class AuthorController : AbstractController
 {
     private readonly IBlogService _blogService;
@@ -17,14 +19,15 @@ public class AuthorController : AbstractController
     }
 
     [HttpPost]
-    public async Task<ActionResult> Register(RegisterAuthorRequest registerAuthorRequest)
+    [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
+    public async Task<ActionResult<EmptySuccessResponseDto>> Register(RegisterAuthorRequest registerAuthorRequest)
     {
         var passwordHash = _blogService.CreatePasswordHash(registerAuthorRequest.Password);
         var user = await _blogService.GetAuthorByEmailAddress(registerAuthorRequest.EmailAddress);
         var username = await _blogService.GetAuthorByUsername(registerAuthorRequest.Username);
 
         if (user != null || registerAuthorRequest.Username == username?.Username)
-            return BadRequest(new { error = "User already exist :(" });
+            return BadRequest(new UserInputErrorDto());
 
         await _blogService.CreateUser(new Author
         {
@@ -33,10 +36,11 @@ public class AuthorController : AbstractController
             Description = registerAuthorRequest.Description,
             PasswordHash = await passwordHash
         });
-        return Ok(new { result = "Registration Successful :)" });
+        return Ok(new EmptySuccessResponseDto());
     }
 
     [HttpPost]
+    [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
     public async Task<ActionResult<JwtDto>> Login(LoginAuthorRequest loginAuthorRequest)
     {
         var author = await _blogService.GetAuthorByEmailAddress(loginAuthorRequest.EmailAddress);
@@ -45,6 +49,6 @@ public class AuthorController : AbstractController
         if (_blogService.VerifyPassword(loginAuthorRequest.Password, author) == false)
             return BadRequest(new { error = "Wrong username/password :/" });
 
-        return Ok(new JwtDto { AccessToken = await _blogService.CreateToken(author) });
+        return Ok(new JwtDto(new JwtDto.Credentials{ AccessToken = await _blogService.CreateToken(author) }));
     }
 }

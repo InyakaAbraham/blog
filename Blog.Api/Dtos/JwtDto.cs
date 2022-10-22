@@ -1,6 +1,13 @@
 namespace Blog.Api.Dtos;
 
-public class JwtDto
+public class JwtDto:SuccessResponseDto<JwtDto.Credentials>
 {
-    public string? AccessToken { get; set; }
+    public class Credentials
+    {
+        public string AccessToken { get; set; }
+    }
+
+    public JwtDto(Credentials data) : base(data)
+    {
+    }
 }

@@ -11,4 +11,10 @@ public class UserInputErrorDto:ResponseDto<List<ValidationError>>
             .Select(x=>new ValidationError(x.PropertyName,x.ErrorMessage)).ToList())
     {
     }
+    
+    public UserInputErrorDto(string message = "Invalid Input", params ValidationError[]? validationErrors) :
+        base(ResponseCode.UserInputError,
+            message, validationErrors?.ToList())
+    {
+    }
 }

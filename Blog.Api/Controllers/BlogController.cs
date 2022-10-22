@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Blog.Api.Dtos;
 using Blog.Features;
 using Blog.Models;
@@ -9,6 +8,9 @@ namespace Blog.Api.Controllers;
 
 [Route("api/[controller]/[action]")]
 [Attributes.Authorize(UserRole.Default)]
+[ProducesResponseType(typeof(UserNotAuthenticatedResponseDto), 401)]
+[ProducesResponseType(typeof(UserNotAuthorizedResponseDto), 403)]
+[ProducesResponseType(typeof(UserInputErrorDto), 400)]
 public class BlogController : AbstractController
 {
     private readonly IBlogService _blogService;
@@ -20,6 +22,8 @@ public class BlogController : AbstractController
 
     [HttpGet]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
+
     public async Task<ActionResult<PagedBlogPostResponseDto>> GetAllPosts([FromQuery] PageParameters pageParameters)
     {
         var post = await _blogService.GetAllPosts(pageParameters);
@@ -36,6 +40,7 @@ public class BlogController : AbstractController
 
     [HttpGet]
     [Attributes.Authorize(UserRole.Author)]
+    [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
     public async Task<ActionResult<PagedBlogPostResponseDto>> GetPostByAuthor([FromQuery] PageParameters pageParameters)
     {
         var userId = GetContextUserId();
@@ -53,6 +58,7 @@ public class BlogController : AbstractController
 
     [HttpGet("id")]
     [Attributes.Authorize(UserRole.Administrator, UserRole.Moderator)]
+    [ProducesResponseType(typeof(SuccessResponseDto<BlogPost>), 200)]
     public async Task<ActionResult<SuccessResponseDto<BlogPost>>> GetPostById(long id)
     {
         var blogPost = await _blogService.GetPostById(id);
@@ -62,6 +68,7 @@ public class BlogController : AbstractController
 
     [HttpGet("title")]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
     public async Task<ActionResult<PagedBlogPostResponseDto>> GetPostByTitle(string title,
         [FromQuery] PageParameters pageParameters)
     {
@@ -79,7 +86,9 @@ public class BlogController : AbstractController
 
     [HttpPost]
     [Attributes.Authorize(UserRole.Author)]
-    public async Task<ActionResult<BlogPost>> AddPost([FromBody]NewPostDto newPost)
+    [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
+
+    public async Task<ActionResult<EmptySuccessResponseDto>> AddPost([FromBody]NewPostDto newPost)
     {
         var author = await _blogService.GetAuthorById(newPost.AuthorId);
         var category = await _blogService.GetCategoryByName(newPost.CategoryName);
@@ -95,14 +104,15 @@ public class BlogController : AbstractController
             Tags = newPost.Tags,
             Author = author
         });
-        if (blogPost == null) return BadRequest(new { error = "Kindly enter a post in the right format" });
-        return Ok(blogPost);
+        if (blogPost == null) return BadRequest( new UserInputErrorDto());
+        return Ok(new EmptySuccessResponseDto());
     }
 
 
-    [HttpPut]
+    [HttpPatch]
     [Attributes.Authorize(UserRole.Administrator, UserRole.Moderator)]
-    public async Task<ActionResult<BlogPost>> UpdatePost([FromBody]NewPostDto updatePost)
+    [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
+    public async Task<ActionResult<EmptySuccessResponseDto>> UpdatePost([FromBody]NewPostDto updatePost)
     {
         var post = await _blogService.GetPostById(updatePost.PostId) ?? new BlogPost();
         post.Author = post.Author;
@@ -115,15 +125,16 @@ public class BlogController : AbstractController
         post.Updated = DateTime.UtcNow;
 
         var blogPost = await _blogService.UpdatePost(post);
-        if (blogPost == null) return NotFound(new { error = "Not Found :/" });
-        return Ok(blogPost);
+        if (blogPost == null) return NotFound(new UserInputErrorDto());
+        return Ok(new EmptySuccessResponseDto());
     }
 
     [HttpDelete("id")]
     [Attributes.Authorize(UserRole.Administrator)]
-    public async Task<ActionResult> DeletePost(long id)
+    [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
+    public async Task<ActionResult<EmptySuccessResponseDto>> DeletePost(long id)
     {
         await _blogService.DeletePost(id);
-        return Ok(new { error = "Post Deleted :(" });
+        return Ok(new EmptySuccessResponseDto());
     }
 }
