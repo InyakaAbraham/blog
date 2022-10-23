@@ -5,27 +5,42 @@ using Blog.Models;
 using Blog.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using StackExchange.Redis;
+using Role = Blog.Models.Role;
 
 namespace Blog.Features;
 
 public class BlogService : IBlogService
 {
+    
+    private static readonly Random GenerateRandomToken = new();
     private readonly AppSettings _appSettings;
     private readonly DataContext _dataContext;
+    private readonly IEmailService _emailService;
+    private readonly IDatabase _database;
 
-    public BlogService(DataContext dataContext, AppSettings appSettings)
+    public BlogService
+    (
+        DataContext dataContext, 
+        IConnectionMultiplexer redis,
+        AppSettings appSettings, 
+        IEmailService emailService
+        )
     {
         _dataContext = dataContext;
         _appSettings = appSettings;
+        _emailService = emailService;
+        _database = redis.GetDatabase();
+
     }
 
     public async Task<PagedList<BlogPost>> GetAllPosts(PageParameters pageParameters)
     {
         var post = await _dataContext.BlogPosts.Include(x => x.Author)
             .Include(x => x.Category)
-            .OrderBy(x=>x.PostId)
+            .OrderBy(x => x.PostId)
             .ToListAsync();
-        return await PagedList<BlogPost>.ToPagedList(post,pageParameters.PageNumber,pageParameters.PageSize);
+        return await PagedList<BlogPost>.ToPagedList(post, pageParameters.PageNumber, pageParameters.PageSize);
     }
 
     public async Task<BlogPost?> GetPostById(long id)
@@ -33,7 +48,7 @@ public class BlogService : IBlogService
         var post = await _dataContext.BlogPosts
             .Where(x => x.PostId == id).Include(x => x!.Author)
             .Include(x => x!.Category)
-            .OrderBy(x=>x.PostId)
+            .OrderBy(x => x.PostId)
             .FirstOrDefaultAsync();
 
         return post ?? null;
@@ -48,12 +63,12 @@ public class BlogService : IBlogService
         return await PagedList<BlogPost>.ToPagedList(post, pageParameters.PageNumber, pageParameters.PageSize);
     }
 
-    public async Task<PagedList<BlogPost>> GetPostByAuthor(long id,PageParameters pageParameters)
+    public async Task<PagedList<BlogPost>> GetPostByAuthor(long id, PageParameters pageParameters)
     {
         var post = await _dataContext.BlogPosts
             .Where(x => x.AuthorId == id).Include(x => x.Author)
-            .Include(x=>x.Category)
-            .OrderBy(x=>x.Title)
+            .Include(x => x.Category)
+            .OrderBy(x => x.Title)
             .ToListAsync();
         return await PagedList<BlogPost>.ToPagedList(post, pageParameters.PageNumber, pageParameters.PageSize);
 
@@ -124,6 +139,13 @@ public class BlogService : IBlogService
     }
 
 
+    public async Task<Author> UpdateAuthor(Author author)
+    {
+        _dataContext.Authors.Update(author);
+        await _dataContext.SaveChangesAsync();
+        return author;
+    }
+
     public async Task<Author?> GetAuthorByEmailAddress(string emailAddress)
     {
         return await _dataContext.Authors.Include(x => x.Roles)
@@ -153,6 +175,14 @@ public class BlogService : IBlogService
     {
         author.Roles = new List<Role?>
             { await _dataContext.Roles.SingleOrDefaultAsync(x => x.Id == UserRole.Author) };
+        
+        var token = CreateRandomToken();
+        
+        await _database.StringSetAsync($"email_verification_otp:{author.EmailAddress}",
+            token, TimeSpan.FromMinutes(20));
+        
+        _emailService.Send("to_address@example.com", "Verification Token", token);
+        
         _dataContext.Authors.Add(author);
         await _dataContext.SaveChangesAsync();
         return author;
@@ -163,12 +193,12 @@ public class BlogService : IBlogService
         return await Task.FromResult(BCrypt.Net.BCrypt.HashPassword(password));
     }
 
-    public bool VerifyPassword(string password, Author author)
+    public Task<bool> VerifyPassword(string password, Author author)
     {
-        return BCrypt.Net.BCrypt.Verify(password, author.PasswordHash);
+        return Task.FromResult(BCrypt.Net.BCrypt.Verify(password, author.PasswordHash));
     }
 
-    public Task<string> CreateToken(Author author)
+    public Task<string> CreateJwtToken(Author author)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appSettings.JwtSecret));
         var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
@@ -186,18 +216,52 @@ public class BlogService : IBlogService
             )));
     }
 
-    public async Task<Category?> AddCategory(Category newCategory)
+    public string CreateRandomToken()
     {
-        var category = await GetCategoryByName(newCategory.CategoryName);
-        if (category != null)
-            return category;
-
-        var cat = new Category
+        int CreateRandomNumber(int min, int max)
         {
-            CategoryName = newCategory.CategoryName
-        };
-        _dataContext.Categories.Add(cat);
-        await _dataContext.SaveChangesAsync();
-        return category;
+            lock (GenerateRandomToken)
+            {
+                return GenerateRandomToken.Next(min, max);
+            }
+        }
+
+        return CreateRandomNumber(0, 1000000).ToString("D6");
     }
+
+    public async Task<bool> VerifyAuthor(string emailAddress, string token)
+    {
+        var tokenCheck = await _database.StringGetAsync($"email_verification_otp:{emailAddress}");
+
+        if (token == tokenCheck)
+        {
+            var author = await GetAuthorByEmailAddress(emailAddress);
+
+            if (author != null)
+            {
+                author.VerifiedAt = DateTime.UtcNow;
+            }
+
+            _dataContext.Authors.Update(author!);
+            await _dataContext.SaveChangesAsync();
+            return true;
+        }
+
+        return false;
+    }
+
+    public async Task<Category?> AddCategory(Category newCategory)
+        {
+            var category = await GetCategoryByName(newCategory.CategoryName);
+            if (category != null)
+                return category;
+
+            var cat = new Category
+            {
+                CategoryName = newCategory.CategoryName
+            };
+            _dataContext.Categories.Add(cat);
+            await _dataContext.SaveChangesAsync();
+            return category;
+        }
 }

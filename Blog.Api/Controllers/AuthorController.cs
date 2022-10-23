@@ -48,28 +48,45 @@ public class AuthorController : AbstractController
             EmailAddress = registerAuthorRequest.EmailAddress,
             Username = registerAuthorRequest.Username,
             Description = registerAuthorRequest.Description,
-            PasswordHash = await passwordHash
+            PasswordHash = await passwordHash,
+            CreatedAt = DateTime.UtcNow,
+
         });
         return Ok(new EmptySuccessResponseDto());
     }
 
+    [HttpPatch]
+    [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
+    public async Task<ActionResult<EmptySuccessResponseDto>> VerifyUser(string emailAddress, string token)
+    {
+        var user = await _blogService.GetAuthorByEmailAddress(emailAddress);
+        if (user == null)
+            return BadRequest(new UserInputErrorDto());
+
+        if (await _blogService.VerifyAuthor(emailAddress, token) == false)
+            return BadRequest(new UserInputErrorDto());
+
+        return Ok(new EmptySuccessResponseDto());
+    }
+    
     [HttpPost]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
     public async Task<ActionResult<JwtDto>> Login(LoginAuthorRequest loginAuthorRequest)
     {
         var result = await _loginAuthorRequest.ValidateAsync(loginAuthorRequest);
-       
-        if (!result.IsValid)
-        {
-            return BadRequest(new UserInputErrorDto(result));
-        }
-       
+
+        if (!result.IsValid) return BadRequest(new UserInputErrorDto(result));
+        
         var author = await _blogService.GetAuthorByEmailAddress(loginAuthorRequest.EmailAddress);
 
-        if (author == null) return BadRequest(new { error = "Wrong username/password :/" });
-        if (_blogService.VerifyPassword(loginAuthorRequest.Password, author) == false)
-            return BadRequest(new { error = "Wrong username/password :/" });
+        if (author == null || !await _blogService.VerifyPassword(loginAuthorRequest.Password,author))
+            return BadRequest(new UserInputErrorDto());
 
-        return Ok(new JwtDto(new JwtDto.Credentials{ AccessToken = await _blogService.CreateToken(author) }));
-    }
+        if (author?.VerifiedAt == null) return BadRequest(new UserInputErrorDto("Not Verified :("));
+        
+        author.LastLogin=DateTime.UtcNow;
+        await _blogService.UpdateAuthor(author);
+        
+        return Ok(new JwtDto
+            (new JwtDto.Credentials { AccessToken = await _blogService.CreateJwtToken(author) }));   }
 }
