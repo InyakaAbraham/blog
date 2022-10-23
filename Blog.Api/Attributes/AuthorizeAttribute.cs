@@ -1,3 +1,4 @@
+using Blog.Api.Dtos;
 using Blog.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,6 +24,12 @@ public class AuthorizeAttribute : Attribute, IAuthorizationFilter
 
         if (allowAnonymous) return;
 
+        var rawUserId = context.HttpContext.User.Claims.FirstOrDefault(x => x.Type == "sub");
+        
+        if (rawUserId is null)
+            context.Result = new JsonResult(new UserNotAuthenticatedResponseDto())
+                { StatusCode = StatusCodes.Status401Unauthorized };
+        
         var parsedRoles = context.HttpContext.User.Claims
             .Where(x => x.Type == "role")
             .Select(y => Enum.Parse<UserRole>(y.Value))
@@ -32,7 +39,7 @@ public class AuthorizeAttribute : Attribute, IAuthorizationFilter
         foreach (var role in _roles)
             if (!parsedRoles.Contains(role))
             {
-                context.Result = new JsonResult(new { message = "Missing Privileges" })
+                context.Result = new JsonResult(new UserNotAuthorizedResponseDto())
                     { StatusCode = StatusCodes.Status403Forbidden };
                 break;
             }
