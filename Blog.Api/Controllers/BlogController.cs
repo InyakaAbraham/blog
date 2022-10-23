@@ -15,9 +15,12 @@ namespace Blog.Api.Controllers;
 public class BlogController : AbstractController
 {
     private readonly IBlogService _blogService;
-    public BlogController(IBlogService blogService)
+    private readonly IUserService _userService;
+
+    public BlogController(IBlogService blogService,IUserService userService)
     {
         _blogService = blogService;
+        _userService = userService;
     }
 
     [HttpGet]
@@ -90,7 +93,7 @@ public class BlogController : AbstractController
 
     public async Task<ActionResult<EmptySuccessResponseDto>> AddPost([FromBody]NewPostDto newPost)
     {
-        var author = await _blogService.GetAuthorById(newPost.AuthorId);
+        var author = await _userService.GetAuthorById(newPost.AuthorId);
         var category = await _blogService.GetCategoryByName(newPost.CategoryName);
         var authorId = GetContextUserId();
         var blogPost = await _blogService.AddPost(new BlogPost

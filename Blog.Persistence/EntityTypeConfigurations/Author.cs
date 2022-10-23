@@ -1,3 +1,4 @@
+using Blog.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,5 +14,6 @@ public class Author : IEntityTypeConfiguration<Models.Author>
         builder.HasIndex(u => u.EmailAddress).IsUnique();
         builder.HasMany(a => a.BlogPosts)
             .WithOne(b => b.Author).IsRequired();
+      
     }
 }

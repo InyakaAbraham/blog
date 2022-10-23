@@ -20,12 +20,14 @@ var config = new ConfigurationBuilder()
 var appSettings = config.GetSection("AppSettings").Get<AppSettings>();
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
-builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 builder.Services.AddSingleton(appSettings);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDbContextFactory<DataContext>(options => { options.UseNpgsql(appSettings.PostgresDsn); });
 builder.Services.AddScoped<IBlogService, BlogService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
 builder.Services.AddSwaggerGen(options =>
 {
