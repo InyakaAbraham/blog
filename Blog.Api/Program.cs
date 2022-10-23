@@ -1,8 +1,10 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Reflection;
 using System.Text;
 using Blog.Features;
 using Blog.Models;
 using Blog.Persistence;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -17,7 +19,7 @@ var config = new ConfigurationBuilder()
 var appSettings = config.GetSection("AppSettings").Get<AppSettings>();
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
-
+builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 builder.Services.AddSingleton(appSettings);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

@@ -1,6 +1,7 @@
 using Blog.Api.Dtos;
 using Blog.Features;
 using Blog.Models;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,7 +15,6 @@ namespace Blog.Api.Controllers;
 public class BlogController : AbstractController
 {
     private readonly IBlogService _blogService;
-
     public BlogController(IBlogService blogService)
     {
         _blogService = blogService;
