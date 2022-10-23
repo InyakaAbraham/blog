@@ -1,7 +1,6 @@
 using Blog.Api.Dtos;
 using Blog.Features;
 using Blog.Models;
-using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,7 +16,7 @@ public class BlogController : AbstractController
     private readonly IBlogService _blogService;
     private readonly IUserService _userService;
 
-    public BlogController(IBlogService blogService,IUserService userService)
+    public BlogController(IBlogService blogService, IUserService userService)
     {
         _blogService = blogService;
         _userService = userService;
@@ -26,18 +25,17 @@ public class BlogController : AbstractController
     [HttpGet]
     [AllowAnonymous]
     [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
-
     public async Task<ActionResult<PagedBlogPostResponseDto>> GetAllPosts([FromQuery] PageParameters pageParameters)
     {
         var post = await _blogService.GetAllPosts(pageParameters);
-        return Ok(new PagedBlogPostResponseDto(post,new PaginatedDto<List<BlogPost>>.PageInformation()
+        return Ok(new PagedBlogPostResponseDto(post, new PaginatedDto<List<BlogPost>>.PageInformation
         {
             TotalPages = post.TotalPages,
-            TotalCount=post.TotalCount,
-            CurrentPage=post.CurrentPage,
-            PageSize=post.PageSize,
-            HasNext=post.HasNext,
-            HasPrevious=post.HasPrevious
+            TotalCount = post.TotalCount,
+            CurrentPage = post.CurrentPage,
+            PageSize = post.PageSize,
+            HasNext = post.HasNext,
+            HasPrevious = post.HasPrevious
         }));
     }
 
@@ -48,7 +46,7 @@ public class BlogController : AbstractController
     {
         var userId = GetContextUserId();
         var post = await _blogService.GetPostByAuthor(userId, pageParameters);
-        return Ok(new PagedBlogPostResponseDto(post,new PaginatedDto<List<BlogPost>>.PageInformation()
+        return Ok(new PagedBlogPostResponseDto(post, new PaginatedDto<List<BlogPost>>.PageInformation
         {
             HasNext = post.HasNext,
             CurrentPage = post.CurrentPage,
@@ -76,7 +74,7 @@ public class BlogController : AbstractController
         [FromQuery] PageParameters pageParameters)
     {
         var post = await _blogService.GetPostByTitle(title, pageParameters);
-        return Ok(new PagedBlogPostResponseDto(post,new PaginatedDto<List<BlogPost>>.PageInformation()
+        return Ok(new PagedBlogPostResponseDto(post, new PaginatedDto<List<BlogPost>>.PageInformation
         {
             HasNext = post.HasNext,
             CurrentPage = post.CurrentPage,
@@ -90,8 +88,7 @@ public class BlogController : AbstractController
     [HttpPost]
     [Attributes.Authorize(UserRole.Author)]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
-
-    public async Task<ActionResult<EmptySuccessResponseDto>> AddPost([FromBody]NewPostDto newPost)
+    public async Task<ActionResult<EmptySuccessResponseDto>> AddPost([FromBody] NewPostDto newPost)
     {
         var author = await _userService.GetAuthorById(newPost.AuthorId);
         var category = await _blogService.GetCategoryByName(newPost.CategoryName);
@@ -107,15 +104,15 @@ public class BlogController : AbstractController
             Tags = newPost.Tags,
             Author = author
         });
-        if (blogPost == null) return BadRequest( new UserInputErrorDto());
-        return Ok(new EmptySuccessResponseDto());
+        if (blogPost == null) return BadRequest(new UserInputErrorDto("Enter post in valid format :("));
+        return Ok(new EmptySuccessResponseDto("Post Created :)"));
     }
 
 
     [HttpPatch]
     [Attributes.Authorize(UserRole.Administrator, UserRole.Moderator)]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
-    public async Task<ActionResult<EmptySuccessResponseDto>> UpdatePost([FromBody]NewPostDto updatePost)
+    public async Task<ActionResult<EmptySuccessResponseDto>> UpdatePost([FromBody] NewPostDto updatePost)
     {
         var post = await _blogService.GetPostById(updatePost.PostId) ?? new BlogPost();
         post.Author = post.Author;
@@ -128,8 +125,8 @@ public class BlogController : AbstractController
         post.Updated = DateTime.UtcNow;
 
         var blogPost = await _blogService.UpdatePost(post);
-        if (blogPost == null) return NotFound(new UserInputErrorDto());
-        return Ok(new EmptySuccessResponseDto());
+        if (blogPost == null) return BadRequest(new UserInputErrorDto("No post with such Id :("));
+        return Ok(new EmptySuccessResponseDto("Post updated :)"));
     }
 
     [HttpDelete("id")]
@@ -138,6 +135,6 @@ public class BlogController : AbstractController
     public async Task<ActionResult<EmptySuccessResponseDto>> DeletePost(long id)
     {
         await _blogService.DeletePost(id);
-        return Ok(new EmptySuccessResponseDto());
+        return Ok(new EmptySuccessResponseDto("Post Deleted :("));
     }
 }

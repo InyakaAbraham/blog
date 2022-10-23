@@ -44,7 +44,7 @@ public class UserService:IUserService
         await _database.StringSetAsync($"email_verification_otp:{author.EmailAddress}",
             token, TimeSpan.FromMinutes(20));
         
-        _emailService.Send("to_address@example.com", "Verification Token", token);
+        _emailService.Send("to_address@example.com", "Verification Token", $"Your OTP is {token} valid for 20Minutes.");
         
         _dataContext.Authors.Add(author);
         await _dataContext.SaveChangesAsync();
@@ -95,7 +95,7 @@ public class UserService:IUserService
         
         await _database.StringSetAsync($"email_reset_otp:{emailAddress}",
             token, TimeSpan.FromMinutes(20));
-        _emailService.Send("to_address@example.com", "Reset Token", $" Your OTP is {token} do not share this with anyone.");
+        _emailService.Send("to_address@example.com", "Reset Token", $" Your OTP is {token} valid for 20Minutes.");
        
         return true;    }
 
@@ -132,6 +132,50 @@ public class UserService:IUserService
         
         return false;    }
 
+    public async Task<bool> ChangeEmailAddress(string oldEmailAddress, string password)
+    {
+        var author = await GetAuthorByEmailAddress(oldEmailAddress);
+        
+        if (author==null) return false;
+
+        var confirmAuthor = await VerifyPassword(password, author);
+
+        if (!confirmAuthor) return false;
+
+        var token = CreateRandomToken();
+        
+        await _database.StringSetAsync($"email_change_otp:{author.EmailAddress}",
+            token, TimeSpan.FromMinutes(20));
+        
+        _emailService.Send("to_address@example.com", "Verification Token", $"Your OTP is {token} valid for 20Minutes.");
+
+        return true;
+    }
+
+    public async Task<bool> VerifyNewEmail(string oldEmailAddress, string newEmailAddress, string token)
+    {
+        var newEmailAddressCheck = await GetAuthorByEmailAddress(newEmailAddress);
+        if (newEmailAddressCheck != null) return false;
+
+        var tokenCheck = await _database.StringGetAsync($"email_change_otp:{oldEmailAddress}");
+
+        if (token == tokenCheck)
+        {
+            var author = await GetAuthorByEmailAddress(oldEmailAddress);
+
+            if (author != null)
+            {
+                author.EmailAddress = newEmailAddress;
+            }
+
+            _dataContext.Authors.Update(author!);
+            await _dataContext.SaveChangesAsync();
+            return true;
+        }
+
+        return false;
+        
+    }
     public Task<string> CreateJwtToken(Author author)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appSettings.JwtSecret));
@@ -179,5 +223,6 @@ public class UserService:IUserService
             return true;
         }
 
-        return false;    }
+        return false;    
+    }
 }
