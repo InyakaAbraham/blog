@@ -27,7 +27,8 @@ public class AuthorController : AbstractController
         IValidator<RegisterAuthorRequest> registerAuthorRequest,
         IValidator<ResetPasswordRequest> resetPasswordRequestValidator,
         IValidator<ChangePasswordRequest> changePasswordRequestValidator,
-        IUserService userService, IValidator<UpdateAuthorRequestDto> updateAuthorRequestDto, IValidator<ChangeEmailAddressRequestDto> changeEmailAddressRequestDto)
+        IUserService userService, IValidator<UpdateAuthorRequestDto> updateAuthorRequestDto, 
+        IValidator<ChangeEmailAddressRequestDto> changeEmailAddressRequestDto)
     {
         _loginAuthorRequest = loginAuthorRequest;
         _registerAuthorRequest = registerAuthorRequest;
