@@ -25,11 +25,11 @@ public class AuthorizeAttribute : Attribute, IAuthorizationFilter
         if (allowAnonymous) return;
 
         var rawUserId = context.HttpContext.User.Claims.FirstOrDefault(x => x.Type == "sub");
-        
+
         if (rawUserId is null)
             context.Result = new JsonResult(new UserNotAuthenticatedResponseDto())
                 { StatusCode = StatusCodes.Status401Unauthorized };
-        
+
         var parsedRoles = context.HttpContext.User.Claims
             .Where(x => x.Type == "role")
             .Select(y => Enum.Parse<UserRole>(y.Value))

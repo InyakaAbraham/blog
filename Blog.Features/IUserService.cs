@@ -17,6 +17,6 @@ public interface IUserService
     public Task<bool> ChangeEmailAddress(string oldEmailAddress, string password);
     public Task<string> CreateJwtToken(Author author);
     public string CreateRandomToken();
-    public Task<bool> VerifyAuthor(string emailAddress,string token);
-    public Task<bool> VerifyNewEmail(string oldEmailAddress,string newEmailAddress,string token);
+    public Task<bool> VerifyAuthor(string emailAddress, string token);
+    public Task<bool> VerifyNewEmail(string oldEmailAddress, string newEmailAddress, string token);
 }

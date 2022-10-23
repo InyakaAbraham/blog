@@ -14,6 +14,5 @@ public class Author : IEntityTypeConfiguration<Models.Author>
         builder.Property(u => u.VerifiedAt).IsRequired(false);
         builder.HasMany(a => a.BlogPosts)
             .WithOne(b => b.Author).IsRequired();
-   
     }
 }

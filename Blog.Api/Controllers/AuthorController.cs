@@ -13,12 +13,12 @@ namespace Blog.Api.Controllers;
 [ProducesResponseType(typeof(UserInputErrorDto), 400)]
 public class AuthorController : AbstractController
 {
-    private readonly IValidator<ChangePasswordRequest> _changePasswordRequestValidator;
     private readonly IValidator<ChangeEmailAddressRequestDto> _changeEmailAddressRequestDto;
+    private readonly IValidator<ChangePasswordRequest> _changePasswordRequestValidator;
     private readonly IValidator<LoginAuthorRequest> _loginAuthorRequest;
     private readonly IValidator<RegisterAuthorRequest> _registerAuthorRequest;
-    private readonly IValidator<UpdateAuthorRequestDto> _updateAuthorRequestDto;
     private readonly IValidator<ResetPasswordRequest> _resetPasswordRequestValidator;
+    private readonly IValidator<UpdateAuthorRequestDto> _updateAuthorRequestDto;
     private readonly IUserService _userService;
 
 
@@ -27,7 +27,7 @@ public class AuthorController : AbstractController
         IValidator<RegisterAuthorRequest> registerAuthorRequest,
         IValidator<ResetPasswordRequest> resetPasswordRequestValidator,
         IValidator<ChangePasswordRequest> changePasswordRequestValidator,
-        IUserService userService, IValidator<UpdateAuthorRequestDto> updateAuthorRequestDto, 
+        IUserService userService, IValidator<UpdateAuthorRequestDto> updateAuthorRequestDto,
         IValidator<ChangeEmailAddressRequestDto> changeEmailAddressRequestDto)
     {
         _loginAuthorRequest = loginAuthorRequest;
@@ -72,6 +72,7 @@ public class AuthorController : AbstractController
     public async Task<ActionResult<EmptySuccessResponseDto>> VerifyUser(string emailAddress, string token)
     {
         var author = await _userService.GetAuthorByEmailAddress(emailAddress);
+
         if (author == null)
             return BadRequest(new UserInputErrorDto("Kindly enter a registered email :("));
 
@@ -148,11 +149,11 @@ public class AuthorController : AbstractController
         await _userService.UpdateAuthor(author);
         return Ok(new EmptySuccessResponseDto("Password changed Successfully"));
     }
-    
+
     [HttpPatch]
     [AllowAnonymous]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
-    public async Task<ActionResult<EmptySuccessResponseDto>> ChangeEmailAddress(string oldEmailAddress,string password)
+    public async Task<ActionResult<EmptySuccessResponseDto>> ChangeEmailAddress(string oldEmailAddress, string password)
     {
         var response = await _userService.ChangeEmailAddress(oldEmailAddress, password);
 
@@ -160,11 +161,12 @@ public class AuthorController : AbstractController
 
         return Ok(new EmptySuccessResponseDto("You can proceed to changing your Email Address :)"));
     }
-    
+
     [HttpPatch]
     [AllowAnonymous]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
-    public async Task<ActionResult<EmptySuccessResponseDto>> VerifyEmailChange(ChangeEmailAddressRequestDto request,string token)
+    public async Task<ActionResult<EmptySuccessResponseDto>> VerifyEmailChange(ChangeEmailAddressRequestDto request,
+        string token)
     {
         var result = await _changeEmailAddressRequestDto.ValidateAsync(request);
 
@@ -176,7 +178,7 @@ public class AuthorController : AbstractController
 
         return Ok(new EmptySuccessResponseDto("Email Address changed Successfully :)"));
     }
-    
+
     [HttpPatch]
     [AllowAnonymous]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
@@ -192,12 +194,12 @@ public class AuthorController : AbstractController
 
         if (author == null) return BadRequest("Kindly login to edit profile :)");
         if (usernameCheck != null) return BadRequest("Username already Exists");
-        
+
         author.Username = request.Username;
         author.FirstName = request.FirstName;
         author.LastName = request.LastName;
         author.Description = request.Description;
-        
+
         await _userService.UpdateAuthor(author);
         return Ok(new EmptySuccessResponseDto("Profile Updated Successfully"));
     }

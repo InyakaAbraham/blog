@@ -10,45 +10,42 @@ using Role = Blog.Models.Role;
 
 namespace Blog.Features;
 
-public class UserService:IUserService
+public class UserService : IUserService
 {
     private static readonly Random GenerateRandomToken = new();
-    private readonly IEmailService _emailService;
-    private readonly DataContext _dataContext;
     private readonly AppSettings _appSettings;
     private readonly IDatabase _database;
+    private readonly DataContext _dataContext;
+    private readonly IEmailService _emailService;
 
     public UserService(
-        IEmailService emailService, 
+        IEmailService emailService,
         IConnectionMultiplexer redis,
         DataContext dataContext,
-        AppSettings appSettings 
-
-
-        )
+        AppSettings appSettings
+    )
     {
         _emailService = emailService;
         _dataContext = dataContext;
         _appSettings = appSettings;
         _database = redis.GetDatabase();
-
     }
-    
+
     public async Task<Author> CreateUser(Author author)
     {
         author.Roles = new List<Role?>
             { await _dataContext.Roles.SingleOrDefaultAsync(x => x.Id == UserRole.Author) };
-        
+
         var token = CreateRandomToken();
-        
+
         await _database.StringSetAsync($"email_verification_otp:{author.EmailAddress}",
             token, TimeSpan.FromMinutes(20));
-        
+
         _emailService.Send("to_address@example.com", "Verification Token", $"Your OTP is {token} valid for 20Minutes.");
-        
+
         _dataContext.Authors.Add(author);
         await _dataContext.SaveChangesAsync();
-        return author;    
+        return author;
     }
 
     public async Task<Author> UpdateAuthor(Author author)
@@ -73,7 +70,8 @@ public class UserService:IUserService
     {
         return await _dataContext.Authors.Where(a => a.AuthorId == authorId)
             .Include(a => a.BlogPosts)
-            .SingleOrDefaultAsync();    }
+            .SingleOrDefaultAsync();
+    }
 
     public async Task<string?> CreatePasswordHash(string password)
     {
@@ -87,17 +85,18 @@ public class UserService:IUserService
 
     public async Task<bool> ForgotPassword(string emailAddress)
     {
-        var author = await GetAuthorByEmailAddress (emailAddress);
-       
+        var author = await GetAuthorByEmailAddress(emailAddress);
+
         if (author == null) return false;
 
         var token = CreateRandomToken();
-        
+
         await _database.StringSetAsync($"email_reset_otp:{emailAddress}",
             token, TimeSpan.FromMinutes(20));
         _emailService.Send("to_address@example.com", "Reset Token", $" Your OTP is {token} valid for 20Minutes.");
-       
-        return true;    }
+
+        return true;
+    }
 
     public async Task<bool> ResetPassword(string emailAddress, string token, string password)
     {
@@ -112,41 +111,43 @@ public class UserService:IUserService
             await UpdateAuthor(user);
         }
 
-        return true;    }
+        return true;
+    }
 
     public async Task<bool> ChangePassword(string password, string newPassword, string emailAddress)
     {
         var author = await GetAuthorByEmailAddress(emailAddress);
-        var passwordCheck = await VerifyPassword(password,author!);
-        
+        var passwordCheck = await VerifyPassword(password, author!);
+
         if (passwordCheck)
         {
             var passwordHash = await CreatePasswordHash(newPassword);
-            
+
             author!.PasswordHash = passwordHash;
             _dataContext.Authors.Update(author);
             await _dataContext.SaveChangesAsync();
 
             return true;
         }
-        
-        return false;    }
+
+        return false;
+    }
 
     public async Task<bool> ChangeEmailAddress(string oldEmailAddress, string password)
     {
         var author = await GetAuthorByEmailAddress(oldEmailAddress);
-        
-        if (author==null) return false;
+
+        if (author == null) return false;
 
         var confirmAuthor = await VerifyPassword(password, author);
 
         if (!confirmAuthor) return false;
 
         var token = CreateRandomToken();
-        
+
         await _database.StringSetAsync($"email_change_otp:{author.EmailAddress}",
             token, TimeSpan.FromMinutes(20));
-        
+
         _emailService.Send("to_address@example.com", "Verification Token", $"Your OTP is {token} valid for 20Minutes.");
 
         return true;
@@ -163,10 +164,7 @@ public class UserService:IUserService
         {
             var author = await GetAuthorByEmailAddress(oldEmailAddress);
 
-            if (author != null)
-            {
-                author.EmailAddress = newEmailAddress;
-            }
+            if (author != null) author.EmailAddress = newEmailAddress;
 
             _dataContext.Authors.Update(author!);
             await _dataContext.SaveChangesAsync();
@@ -174,8 +172,8 @@ public class UserService:IUserService
         }
 
         return false;
-        
     }
+
     public Task<string> CreateJwtToken(Author author)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appSettings.JwtSecret));
@@ -191,7 +189,8 @@ public class UserService:IUserService
                 claims: claims,
                 expires: DateTime.Now.AddDays(1),
                 signingCredentials: cred
-            )));    }
+            )));
+    }
 
     public string CreateRandomToken()
     {
@@ -203,7 +202,8 @@ public class UserService:IUserService
             }
         }
 
-        return CreateRandomNumber(0, 1000000).ToString("D6");    }
+        return CreateRandomNumber(0, 1000000).ToString("D6");
+    }
 
     public async Task<bool> VerifyAuthor(string emailAddress, string token)
     {
@@ -213,16 +213,13 @@ public class UserService:IUserService
         {
             var author = await GetAuthorByEmailAddress(emailAddress);
 
-            if (author != null)
-            {
-                author.VerifiedAt = DateTime.UtcNow;
-            }
+            if (author != null) author.VerifiedAt = DateTime.UtcNow;
 
             _dataContext.Authors.Update(author!);
             await _dataContext.SaveChangesAsync();
             return true;
         }
 
-        return false;    
+        return false;
     }
 }

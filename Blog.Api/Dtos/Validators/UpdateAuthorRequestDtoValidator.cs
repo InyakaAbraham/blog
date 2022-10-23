@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace Blog.Api.Dtos.Validators;
 
-public class UpdateAuthorRequestDtoValidator:AbstractValidator<UpdateAuthorRequestDto>
+public class UpdateAuthorRequestDtoValidator : AbstractValidator<UpdateAuthorRequestDto>
 {
     public UpdateAuthorRequestDtoValidator()
     {

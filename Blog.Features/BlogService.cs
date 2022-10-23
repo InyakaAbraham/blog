@@ -2,17 +2,14 @@ using Blog.Models;
 using Blog.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-
-
 namespace Blog.Features;
 
 public class BlogService : IBlogService
 {
-    
     private readonly DataContext _dataContext;
     private readonly IUserService _userService;
 
-    public BlogService(DataContext dataContext,IUserService userService)
+    public BlogService(DataContext dataContext, IUserService userService)
     {
         _dataContext = dataContext;
         _userService = userService;
@@ -55,7 +52,6 @@ public class BlogService : IBlogService
             .OrderBy(x => x.Title)
             .ToListAsync();
         return await PagedList<BlogPost>.ToPagedList(post, pageParameters.PageNumber, pageParameters.PageSize);
-
     }
 
     public async Task<BlogPost?> AddPost(BlogPost newPost)
@@ -130,17 +126,17 @@ public class BlogService : IBlogService
     }
 
     public async Task<Category?> AddCategory(Category newCategory)
-        {
-            var category = await GetCategoryByName(newCategory.CategoryName);
-            if (category != null)
-                return category;
-
-            var cat = new Category
-            {
-                CategoryName = newCategory.CategoryName
-            };
-            _dataContext.Categories.Add(cat);
-            await _dataContext.SaveChangesAsync();
+    {
+        var category = await GetCategoryByName(newCategory.CategoryName);
+        if (category != null)
             return category;
-        }
+
+        var cat = new Category
+        {
+            CategoryName = newCategory.CategoryName
+        };
+        _dataContext.Categories.Add(cat);
+        await _dataContext.SaveChangesAsync();
+        return category;
+    }
 }

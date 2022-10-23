@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace Blog.Api.Dtos.Validators;
 
-public class ChangePasswordRequestValidator:AbstractValidator<ChangePasswordRequest>
+public class ChangePasswordRequestValidator : AbstractValidator<ChangePasswordRequest>
 {
     public ChangePasswordRequestValidator()
     {

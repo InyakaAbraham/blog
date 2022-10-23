@@ -1,14 +1,12 @@
-using Blog.Models;
-
 namespace Blog.Api.Dtos;
 
-public class PaginatedDto<TResultDto>:SuccessResponseDto<TResultDto>
+public class PaginatedDto<TResultDto> : SuccessResponseDto<TResultDto>
 {
-    public PaginatedDto(TResultDto data,PageInformation pageInfo) : base(data)
+    public PaginatedDto(TResultDto data, PageInformation pageInfo) : base(data)
     {
         PageInfo = pageInfo;
     }
-    
+
     public PageInformation PageInfo { get; set; }
 
     public class PageInformation
