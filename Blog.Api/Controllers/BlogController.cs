@@ -97,8 +97,8 @@ public class BlogController : AbstractController
         
         if (!result.IsValid) return BadRequest(new UserInputErrorDto(result));
         
-        var author = await _userService.GetAuthorById(newBlogPost.AuthorId);
         var authorId = GetContextUserId();
+        var author = await _userService.GetAuthorById(authorId);
         var coverImagePath = await _blogService.UploadFile(newBlogPost.CoverImage);
         var blogPost = await _blogService.AddPost(new BlogPost
         {
