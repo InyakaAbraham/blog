@@ -1,13 +1,14 @@
 using Blog.Api.Dtos;
 using Blog.Features;
 using Blog.Models;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Blog.Api.Controllers;
 
 [Route("api/[controller]/[action]")]
-[Attributes.Authorize(UserRole.Default)]
+[Framework.Attributes.Authorize(UserRole.Default)]
 [ProducesResponseType(typeof(UserNotAuthenticatedResponseDto), 401)]
 [ProducesResponseType(typeof(UserNotAuthorizedResponseDto), 403)]
 [ProducesResponseType(typeof(UserInputErrorDto), 400)]
@@ -15,11 +16,13 @@ public class BlogController : AbstractController
 {
     private readonly IBlogService _blogService;
     private readonly IUserService _userService;
+    private readonly IValidator<NewBlogPostDto> _validator;
 
-    public BlogController(IBlogService blogService, IUserService userService)
+    public BlogController(IBlogService blogService, IUserService userService, IValidator<NewBlogPostDto> validator)
     {
         _blogService = blogService;
         _userService = userService;
+        _validator = validator;
     }
 
     [HttpGet]
@@ -40,7 +43,7 @@ public class BlogController : AbstractController
     }
 
     [HttpGet]
-    [Attributes.Authorize(UserRole.Author)]
+    [Framework.Attributes.Authorize(UserRole.Author)]
     [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
     public async Task<ActionResult<PagedBlogPostResponseDto>> GetPostByAuthor([FromQuery] PageParameters pageParameters)
     {
@@ -58,7 +61,7 @@ public class BlogController : AbstractController
     }
 
     [HttpGet("id")]
-    [Attributes.Authorize(UserRole.Administrator, UserRole.Moderator)]
+    [Framework.Attributes.Authorize(UserRole.Administrator, UserRole.Moderator)]
     [ProducesResponseType(typeof(SuccessResponseDto<BlogPost>), 200)]
     public async Task<ActionResult<SuccessResponseDto<BlogPost>>> GetPostById(long id)
     {
@@ -86,41 +89,59 @@ public class BlogController : AbstractController
     }
 
     [HttpPost]
-    [Attributes.Authorize(UserRole.Author)]
+    [Framework.Attributes.Authorize(UserRole.Author)]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
-    public async Task<ActionResult<EmptySuccessResponseDto>> AddPost([FromBody] NewPostDto newPost)
+    public async Task<ActionResult<EmptySuccessResponseDto>> AddPost([FromForm] NewBlogPostDto newBlogPost)
     {
-        var author = await _userService.GetAuthorById(newPost.AuthorId);
-        var category = await _blogService.GetCategoryByName(newPost.CategoryName);
+        var result = await _validator.ValidateAsync(newBlogPost);
+        
+        if (!result.IsValid) return BadRequest(new UserInputErrorDto(result));
+        
+        var author = await _userService.GetAuthorById(newBlogPost.AuthorId);
         var authorId = GetContextUserId();
+        var coverImagePath = await _blogService.UploadFile(newBlogPost.CoverImage);
         var blogPost = await _blogService.AddPost(new BlogPost
         {
-            Title = newPost.Title,
-            Body = newPost.Body,
-            Summary = newPost.Summary,
-            Category = category,
-            CategoryName = newPost.CategoryName,
+            CoverImagePath = coverImagePath,
+            Title = newBlogPost.Title,
+            Body = newBlogPost.Body,
+            Summary = newBlogPost.Summary,
+            Category = await _blogService.AddCategory(new Category
+            {
+                CategoryName = newBlogPost.CategoryName
+            }),
+            CategoryName = newBlogPost.CategoryName,
             AuthorId = authorId,
-            Tags = newPost.Tags,
-            Author = author
+            Tags = newBlogPost.Tags,
+            Author = author,
+            Updated = newBlogPost.Updated,
+            Created = DateTime.UtcNow
         });
+
         if (blogPost == null) return BadRequest(new UserInputErrorDto("Enter post in valid format :("));
+        
         return Ok(new EmptySuccessResponseDto("Post Created :)"));
     }
 
 
     [HttpPatch]
-    [Attributes.Authorize(UserRole.Administrator, UserRole.Moderator)]
+    [Framework.Attributes.Authorize(UserRole.Administrator, UserRole.Moderator)]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
-    public async Task<ActionResult<EmptySuccessResponseDto>> UpdatePost([FromBody] NewPostDto updatePost)
+    public async Task<ActionResult<EmptySuccessResponseDto>> UpdatePost([FromForm] NewBlogPostDto updateBlogPost,long id)
     {
-        var post = await _blogService.GetPostById(updatePost.PostId) ?? new BlogPost();
+        var result = await _validator.ValidateAsync(updateBlogPost);
+        
+        if (!result.IsValid) return BadRequest(new UserInputErrorDto(result));
+
+        var coverImagePath = await _blogService.UploadFile(updateBlogPost.CoverImage);
+        var post = await _blogService.GetPostById(id) ?? new BlogPost();
         post.Author = post.Author;
         post.Category = post.Category;
-        post.Body = updatePost.Body;
-        post.Summary = updatePost.Summary;
-        post.Tags = updatePost.Tags;
-        post.Title = updatePost.Title;
+        post.Body = updateBlogPost.Body;
+        post.Summary = updateBlogPost.Summary;
+        post.Tags = updateBlogPost.Tags;
+        post.Title = updateBlogPost.Title;
+        post.CoverImagePath = coverImagePath;
         post.Created = post.Created;
         post.Updated = DateTime.UtcNow;
 
@@ -130,7 +151,7 @@ public class BlogController : AbstractController
     }
 
     [HttpDelete("id")]
-    [Attributes.Authorize(UserRole.Administrator)]
+    [Framework.Attributes.Authorize(UserRole.Administrator)]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
     public async Task<ActionResult<EmptySuccessResponseDto>> DeletePost(long id)
     {

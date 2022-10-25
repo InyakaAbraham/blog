@@ -2,12 +2,12 @@ using FluentValidation;
 
 namespace Blog.Api.Dtos.Validators;
 
-public class ResetPasswordRequestValidator : AbstractValidator<ResetPasswordRequest>
+public class ChangePasswordRequestDtoValidator : AbstractValidator<ChangePasswordRequestDto>
 {
-    public ResetPasswordRequestValidator()
+    public ChangePasswordRequestDtoValidator()
     {
-        RuleFor(x => x.emailAddress).EmailAddress();
-        RuleFor(x => x.Token).Length(6);
+        RuleFor(x => x.EmailAddress).EmailAddress();
+        RuleFor(x => x.OldPassword).MinimumLength(8);
         RuleFor(x => x.Password).MinimumLength(8);
         RuleFor(x => x.ConfirmPassword)
             .Equal(x => x.Password)

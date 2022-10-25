@@ -1,5 +1,6 @@
 using Blog.Models;
 using Blog.Persistence;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Features;
@@ -56,60 +57,17 @@ public class BlogService : IBlogService
 
     public async Task<BlogPost?> AddPost(BlogPost newPost)
     {
-        var author = await _userService.GetAuthorById(newPost.AuthorId);
-        var post = new BlogPost
-        {
-            Title = newPost.Title,
-            Summary = newPost.Summary,
-            Body = newPost.Body,
-            Author = author,
-            Tags = newPost.Tags,
-            AuthorId = newPost.AuthorId,
-            Category = await AddCategory(new Category
-            {
-                CategoryName = newPost.CategoryName
-            }),
-            CategoryName = newPost.CategoryName,
-            Updated = newPost.Updated,
-            Created = DateTime.UtcNow
-        };
-
-        _dataContext.BlogPosts.Add(post);
+        _dataContext.BlogPosts.Add(newPost);
         await _dataContext.SaveChangesAsync();
 
-        return post;
+        return newPost;
     }
 
     public async Task<BlogPost?> UpdatePost(BlogPost updatePost)
     {
-        var author = await _dataContext.Authors
-            .Where(x => x.AuthorId == updatePost.AuthorId)
-            .FirstOrDefaultAsync();
-        var category = await _dataContext.Categories
-            .Where(x => x.CategoryName.ToUpper() == updatePost.CategoryName.ToUpper())
-            .FirstOrDefaultAsync();
-        if (author == null) return null;
-
-        var post = await _dataContext.BlogPosts.FindAsync(updatePost.PostId);
-
-        if (post != null)
-        {
-            post.Title = updatePost.Title;
-            post.Summary = updatePost.Summary;
-            post.Body = updatePost.Body;
-            post.Tags = updatePost.Tags;
-            post.Category = category;
-            post.Author = author;
-            post.Created = post.Created;
-            post.Updated = DateTime.UtcNow;
-
-            _dataContext.BlogPosts.Update(post);
-            await _dataContext.SaveChangesAsync();
-
-            return post;
-        }
-
-        return null;
+        _dataContext.BlogPosts.Update(updatePost);
+        await _dataContext.SaveChangesAsync();
+        return updatePost;
     }
 
     public async Task DeletePost(long id)
@@ -138,5 +96,14 @@ public class BlogService : IBlogService
         _dataContext.Categories.Add(cat);
         await _dataContext.SaveChangesAsync();
         return category;
+    }
+
+    public Task<string> UploadFile(IFormFile file)
+    {
+        var uniqueFileName = Guid.NewGuid() + "_" + file.FileName;
+        var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "WebRoot/images/", uniqueFileName);
+
+        file.CopyTo(new FileStream(imagePath, FileMode.Create));
+        return Task.FromResult(uniqueFileName);
     }
 }

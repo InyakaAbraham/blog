@@ -2,9 +2,9 @@ using FluentValidation;
 
 namespace Blog.Api.Dtos.Validators;
 
-public class RegisterAuthorRequestValidator : AbstractValidator<RegisterAuthorRequest>
+public class RegisterAuthorRequestDtoValidator : AbstractValidator<RegisterAuthorRequestDto>
 {
-    public RegisterAuthorRequestValidator()
+    public RegisterAuthorRequestDtoValidator()
     {
         RuleFor(x => x.EmailAddress).EmailAddress().WithMessage("Enter a valid Email format");
         RuleFor(x => x.FirstName).NotEmpty().WithMessage("Must have First Name");

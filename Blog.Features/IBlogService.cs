@@ -1,4 +1,5 @@
 using Blog.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace Blog.Features;
 
@@ -12,4 +13,6 @@ public interface IBlogService
     public Task<BlogPost?> UpdatePost(BlogPost updatePost);
     public Task DeletePost(long id);
     public Task<Category?> GetCategoryByName(string categoryName);
+    public Task<string> UploadFile(IFormFile file);
+    public Task<Category?> AddCategory(Category newCategory);
 }

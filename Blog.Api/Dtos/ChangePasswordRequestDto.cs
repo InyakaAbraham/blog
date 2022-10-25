@@ -1,6 +1,6 @@
 namespace Blog.Api.Dtos;
 
-public class ChangePasswordRequest
+public class ChangePasswordRequestDto
 {
     public string EmailAddress { get; set; }
     public string OldPassword { get; set; }

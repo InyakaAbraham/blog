@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Blog.Api.Dtos;
 
-public class RegisterAuthorRequest
+public class RegisterAuthorRequestDto
 {
     [Required] public string EmailAddress { get; set; }
     public string FirstName { get; set; }

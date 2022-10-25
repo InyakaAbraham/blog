@@ -3,9 +3,9 @@ using System.Text.Json.Serialization;
 
 namespace Blog.Api.Dtos;
 
-public class NewPostDto
+public class NewBlogPostDto
 {
-    [Required] public int PostId { get; set; }
+    [JsonIgnore]public IFormFile CoverImage { get; set; }
 
     [Required] public string Title { get; set; }
 
@@ -13,7 +13,7 @@ public class NewPostDto
 
     [Required] public string Body { get; set; }
 
-    [Required] public string[]? Tags { get; set; }
+    [Required] public string? Tags { get; set; }
 
     [JsonIgnore] [Required] public int AuthorId { get; set; }
 

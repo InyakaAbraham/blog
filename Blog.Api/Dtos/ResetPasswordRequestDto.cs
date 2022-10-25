@@ -1,6 +1,6 @@
 namespace Blog.Api.Dtos;
 
-public class ResetPasswordRequest
+public class ResetPasswordRequestDto
 {
     public string emailAddress { get; set; }
     public string Token { get; set; }
