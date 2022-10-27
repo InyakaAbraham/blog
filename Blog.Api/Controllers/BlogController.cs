@@ -31,7 +31,7 @@ public class BlogController : AbstractController
     public async Task<ActionResult<PagedBlogPostResponseDto>> GetAllPosts([FromQuery] PageParameters pageParameters)
     {
         var post = await _blogService.GetAllPosts(pageParameters);
-        return Ok(new PagedBlogPostResponseDto(post, new PaginatedDto<List<BlogPost>>.PageInformation
+        return Ok(new PagedBlogPostResponseDto(post, new PaginatedDto<List<BlogPostResponse>>.PageInformation
         {
             TotalPages = post.TotalPages,
             TotalCount = post.TotalCount,
@@ -42,14 +42,13 @@ public class BlogController : AbstractController
         }));
     }
 
-    [HttpGet]
+    [HttpGet("{id}")]
     [Framework.Attributes.Authorize(UserRole.Author)]
     [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
-    public async Task<ActionResult<PagedBlogPostResponseDto>> GetPostByAuthor([FromQuery] PageParameters pageParameters)
+    public async Task<ActionResult<PagedBlogPostResponseDto>> GetPostByAuthor([FromQuery] PageParameters pageParameters,long id)
     {
-        var userId = GetContextUserId();
-        var post = await _blogService.GetPostByAuthor(userId, pageParameters);
-        return Ok(new PagedBlogPostResponseDto(post, new PaginatedDto<List<BlogPost>>.PageInformation
+        var post = await _blogService.GetPostByAuthor(pageParameters, id);
+        return Ok(new PagedBlogPostResponseDto(post, new PaginatedDto<List<BlogPostResponse>>.PageInformation
         {
             HasNext = post.HasNext,
             CurrentPage = post.CurrentPage,
@@ -60,7 +59,7 @@ public class BlogController : AbstractController
         }));
     }
 
-    [HttpGet("id")]
+    [HttpGet("{id}")]
     [Framework.Attributes.Authorize(UserRole.Administrator, UserRole.Moderator)]
     [ProducesResponseType(typeof(SuccessResponseDto<BlogPost>), 200)]
     public async Task<ActionResult<SuccessResponseDto<BlogPost>>> GetPostById(long id)
@@ -70,14 +69,14 @@ public class BlogController : AbstractController
         return Ok(new SuccessResponseDto<BlogPost>(blogPost));
     }
 
-    [HttpGet("title")]
+    [HttpGet("{title}")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
     public async Task<ActionResult<PagedBlogPostResponseDto>> GetPostByTitle(string title,
         [FromQuery] PageParameters pageParameters)
     {
         var post = await _blogService.GetPostByTitle(title, pageParameters);
-        return Ok(new PagedBlogPostResponseDto(post, new PaginatedDto<List<BlogPost>>.PageInformation
+        return Ok(new PagedBlogPostResponseDto(post, new PaginatedDto<List<BlogPostResponse>>.PageInformation
         {
             HasNext = post.HasNext,
             CurrentPage = post.CurrentPage,
@@ -94,23 +93,24 @@ public class BlogController : AbstractController
     public async Task<ActionResult<EmptySuccessResponseDto>> AddPost([FromForm] NewBlogPostDto newBlogPost)
     {
         var result = await _validator.ValidateAsync(newBlogPost);
-        
+
         if (!result.IsValid) return BadRequest(new UserInputErrorDto(result));
-        
+
         var authorId = GetContextUserId();
         var author = await _userService.GetAuthorById(authorId);
         var coverImagePath = await _blogService.UploadFile(newBlogPost.CoverImage);
+        var category = await _blogService.AddCategory(new Category
+        {
+            CategoryName = newBlogPost.CategoryName
+        });
         var blogPost = await _blogService.AddPost(new BlogPost
         {
             CoverImagePath = coverImagePath,
             Title = newBlogPost.Title,
             Body = newBlogPost.Body,
             Summary = newBlogPost.Summary,
-            Category = await _blogService.AddCategory(new Category
-            {
-                CategoryName = newBlogPost.CategoryName
-            }),
-            CategoryName = newBlogPost.CategoryName,
+            Category = category,
+            CategoryName = category?.CategoryName,
             AuthorId = authorId,
             Tags = newBlogPost.Tags,
             Author = author,
@@ -119,7 +119,7 @@ public class BlogController : AbstractController
         });
 
         if (blogPost == null) return BadRequest(new UserInputErrorDto("Enter post in valid format :("));
-        
+
         return Ok(new EmptySuccessResponseDto("Post Created :)"));
     }
 
@@ -127,30 +127,31 @@ public class BlogController : AbstractController
     [HttpPatch]
     [Framework.Attributes.Authorize(UserRole.Administrator, UserRole.Moderator)]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
-    public async Task<ActionResult<EmptySuccessResponseDto>> UpdatePost([FromForm] NewBlogPostDto updateBlogPost,long id)
+    public async Task<ActionResult<EmptySuccessResponseDto>> UpdatePost([FromForm] NewBlogPostDto updateBlogPost,
+        long id)
     {
         var result = await _validator.ValidateAsync(updateBlogPost);
-        
+
         if (!result.IsValid) return BadRequest(new UserInputErrorDto(result));
 
         var coverImagePath = await _blogService.UploadFile(updateBlogPost.CoverImage);
-        var post = await _blogService.GetPostById(id) ?? new BlogPost();
-        post.Author = post.Author;
-        post.Category = post.Category;
+        var post = await _blogService.GetPostById(id);
+        
+        if (post == null) return BadRequest(new UserInputErrorDto("No post with Id"));
+        
         post.Body = updateBlogPost.Body;
         post.Summary = updateBlogPost.Summary;
         post.Tags = updateBlogPost.Tags;
         post.Title = updateBlogPost.Title;
         post.CoverImagePath = coverImagePath;
-        post.Created = post.Created;
         post.Updated = DateTime.UtcNow;
 
-        var blogPost = await _blogService.UpdatePost(post);
-        if (blogPost == null) return BadRequest(new UserInputErrorDto("No post with such Id :("));
+        await _blogService.UpdatePost(post);
+
         return Ok(new EmptySuccessResponseDto("Post updated :)"));
     }
 
-    [HttpDelete("id")]
+    [HttpDelete("{id}")]
     [Framework.Attributes.Authorize(UserRole.Administrator)]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
     public async Task<ActionResult<EmptySuccessResponseDto>> DeletePost(long id)

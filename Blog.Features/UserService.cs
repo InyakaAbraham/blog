@@ -86,7 +86,6 @@ public class UserService : IUserService
     public async Task<bool> ForgotPassword(string emailAddress)
     {
         var author = await GetAuthorByEmailAddress(emailAddress);
-
         if (author == null) return false;
 
         var token = CreateRandomToken();
@@ -101,47 +100,42 @@ public class UserService : IUserService
     public async Task<bool> ResetPassword(string emailAddress, string token, string password)
     {
         var user = await GetAuthorByEmailAddress(emailAddress);
-        var tokenCheck = await _database.StringGetAsync($"email_reset_otp:{emailAddress}");
-        if (tokenCheck != token) return false;
+        if (user == null) return false;
+
+        var validateToken = await _database.StringGetAsync($"email_reset_otp:{emailAddress}");
+        if (validateToken != token) return false;
 
         var passwordHash = await CreatePasswordHash(password);
-        if (user != null)
-        {
-            user.PasswordHash = passwordHash;
-            await UpdateAuthor(user);
-        }
-
+        user.PasswordHash = passwordHash;
+        await UpdateAuthor(user);
+        
         return true;
     }
 
     public async Task<bool> ChangePassword(string password, string newPassword, string emailAddress)
     {
         var author = await GetAuthorByEmailAddress(emailAddress);
-        var passwordCheck = await VerifyPassword(password, author!);
+        var validatePassword = await VerifyPassword(password, author!);
 
-        if (passwordCheck)
-        {
-            var passwordHash = await CreatePasswordHash(newPassword);
+        if (!validatePassword) return false;
+        
+        var passwordHash = await CreatePasswordHash(newPassword);
 
-            author!.PasswordHash = passwordHash;
-            _dataContext.Authors.Update(author);
-            await _dataContext.SaveChangesAsync();
+        author!.PasswordHash = passwordHash;
+       
+        _dataContext.Authors.Update(author);
+        await _dataContext.SaveChangesAsync();
 
-            return true;
-        }
-
-        return false;
+        return true;
     }
 
     public async Task<bool> ChangeEmailAddress(string oldEmailAddress, string password)
     {
         var author = await GetAuthorByEmailAddress(oldEmailAddress);
-
         if (author == null) return false;
 
-        var confirmAuthor = await VerifyPassword(password, author);
-
-        if (!confirmAuthor) return false;
+        var validateAuthor = await VerifyPassword(password, author);
+        if (!validateAuthor) return false;
 
         var token = CreateRandomToken();
 
@@ -158,20 +152,18 @@ public class UserService : IUserService
         var newEmailAddressCheck = await GetAuthorByEmailAddress(newEmailAddress);
         if (newEmailAddressCheck != null) return false;
 
-        var tokenCheck = await _database.StringGetAsync($"email_change_otp:{oldEmailAddress}");
-
-        if (token == tokenCheck)
-        {
-            var author = await GetAuthorByEmailAddress(oldEmailAddress);
-
-            if (author != null) author.EmailAddress = newEmailAddress;
-
-            _dataContext.Authors.Update(author!);
-            await _dataContext.SaveChangesAsync();
-            return true;
-        }
-
-        return false;
+        var validateToken = await _database.StringGetAsync($"email_change_otp:{oldEmailAddress}");
+        if (validateToken != token) return false;
+       
+        var author = await GetAuthorByEmailAddress(oldEmailAddress);
+        if (author == null) return false;
+        
+        author.EmailAddress = newEmailAddress;
+        
+        _dataContext.Authors.Update(author!);
+        await _dataContext.SaveChangesAsync();
+        
+        return true;
     }
 
     public Task<string> CreateJwtToken(Author author)
@@ -207,19 +199,20 @@ public class UserService : IUserService
 
     public async Task<bool> VerifyAuthor(string emailAddress, string token)
     {
-        var tokenCheck = await _database.StringGetAsync($"email_verification_otp:{emailAddress}");
+        var validateToken = await _database.StringGetAsync($"email_verification_otp:{emailAddress}");
 
-        if (token == tokenCheck)
-        {
-            var author = await GetAuthorByEmailAddress(emailAddress);
+        if (validateToken != token) return false;
+        
+        var author = await GetAuthorByEmailAddress(emailAddress);
+        
+        if (author == null) return false;
+            
+        author.VerifiedAt = DateTime.UtcNow;
+       
+        _dataContext.Authors.Update(author!);
+        await _dataContext.SaveChangesAsync();
+        
+        return true;
 
-            if (author != null) author.VerifiedAt = DateTime.UtcNow;
-
-            _dataContext.Authors.Update(author!);
-            await _dataContext.SaveChangesAsync();
-            return true;
-        }
-
-        return false;
     }
 }

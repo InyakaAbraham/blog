@@ -15,7 +15,7 @@ public class AuthorController : AbstractController
 {
     private readonly IValidator<ChangeEmailAddressRequestDto> _changeEmailAddressRequestDto;
     private readonly IValidator<ChangePasswordRequestDto> _changePasswordRequestValidator;
-    private readonly IValidator<Dto> _loginAuthorRequest;
+    private readonly IValidator<LoginAuthorRequestDto> _loginAuthorRequest;
     private readonly IValidator<RegisterAuthorRequestDto> _registerAuthorRequest;
     private readonly IValidator<ResetPasswordRequestDto> _resetPasswordRequestValidator;
     private readonly IValidator<UpdateAuthorRequestDto> _updateAuthorRequestDto;
@@ -23,7 +23,7 @@ public class AuthorController : AbstractController
 
 
     public AuthorController(
-        IValidator<Dto> loginAuthorRequest,
+        IValidator<LoginAuthorRequestDto> loginAuthorRequest,
         IValidator<RegisterAuthorRequestDto> registerAuthorRequest,
         IValidator<ResetPasswordRequestDto> resetPasswordRequestValidator,
         IValidator<ChangePasswordRequestDto> changePasswordRequestValidator,
@@ -64,6 +64,7 @@ public class AuthorController : AbstractController
             PasswordHash = await passwordHash,
             CreatedAt = DateTime.UtcNow
         });
+        
         return Ok(new EmptySuccessResponseDto("Registration Successfully :)"));
     }
 
@@ -84,15 +85,15 @@ public class AuthorController : AbstractController
 
     [HttpPost]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
-    public async Task<ActionResult<JwtDto>> Login(Dto dto)
+    public async Task<ActionResult<JwtDto>> Login(LoginAuthorRequestDto loginAuthorRequestDto)
     {
-        var result = await _loginAuthorRequest.ValidateAsync(dto);
+        var result = await _loginAuthorRequest.ValidateAsync(loginAuthorRequestDto);
 
         if (!result.IsValid) return BadRequest(new UserInputErrorDto(result));
 
-        var author = await _userService.GetAuthorByEmailAddress(dto.EmailAddress);
+        var author = await _userService.GetAuthorByEmailAddress(loginAuthorRequestDto.EmailAddress);
 
-        if (author == null || !await _userService.VerifyPassword(dto.Password, author))
+        if (author == null || !await _userService.VerifyPassword(loginAuthorRequestDto.Password, author))
             return BadRequest(new UserInputErrorDto("Incorrect username/password"));
 
         if (author?.VerifiedAt == null) return BadRequest(new UserInputErrorDto("Not Verified :("));
@@ -111,7 +112,7 @@ public class AuthorController : AbstractController
         if (await _userService.ForgotPassword(emailAddress) == false)
             return BadRequest(new UserInputErrorDto("If email is registered, you will receive an OTP :)"));
 
-        return Ok(new EmptySuccessResponseDto("If email is registered, you will receive an OTP :)"));
+        return Ok(new EmptySuccessResponseDto("Kindly Check email for OTP :)"));
     }
 
     [HttpPatch]

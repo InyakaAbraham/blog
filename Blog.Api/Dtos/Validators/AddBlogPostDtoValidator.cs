@@ -11,6 +11,6 @@ public class AddBlogPostDtoValidator : AbstractValidator<NewBlogPostDto>
         RuleFor(x => x.Summary).NotEmpty().WithMessage("Field Required");
         RuleFor(x => x.Tags).NotEmpty().WithMessage("Field Required");
         RuleFor(x => x.CategoryName).NotEmpty().WithMessage("Field Required");
-        RuleFor(x => x.CoverImage).SetValidator(new FileValidator()).WithMessage("File too large or not an image");
+        RuleFor(x => x.CoverImage).SetValidator(new FileValidator()).NotEmpty().WithMessage("Check file reqirement");
     }
 }

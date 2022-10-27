@@ -2,9 +2,9 @@ using Blog.Models;
 
 namespace Blog.Api.Dtos;
 
-public class PagedBlogPostResponseDto : PaginatedDto<List<BlogPost>>
+public class PagedBlogPostResponseDto : PaginatedDto<List<BlogPostResponse>>
 {
-    public PagedBlogPostResponseDto(List<BlogPost> data, PageInformation pageInfo) : base(data, pageInfo)
+    public PagedBlogPostResponseDto(List<BlogPostResponse> data, PageInformation pageInfo) : base(data, pageInfo)
     {
     }
 }

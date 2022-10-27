@@ -16,13 +16,25 @@ public class BlogService : IBlogService
         _userService = userService;
     }
 
-    public async Task<PagedList<BlogPost>> GetAllPosts(PageParameters pageParameters)
+    public async Task<PagedList<BlogPostResponse>> GetAllPosts(PageParameters pageParameters)
     {
-        var post = await _dataContext.BlogPosts.Include(x => x.Author)
-            .Include(x => x.Category)
-            .OrderBy(x => x.PostId)
-            .ToListAsync();
-        return await PagedList<BlogPost>.ToPagedList(post, pageParameters.PageNumber, pageParameters.PageSize);
+        var lisPost = await (from bp in _dataContext.Set<BlogPost>()
+            join ar in _dataContext.Set<Author>() on
+                bp.AuthorId equals ar.AuthorId
+            select new BlogPostResponse
+            {
+                AuthorsName = ar.FirstName + "" + ar.LastName,
+                CoverImagePath = bp.CoverImagePath,
+                Title = bp.Summary,
+                Summary = bp.Summary,
+                Body = bp.Body,
+                Tags = bp.Tags,
+                Category = bp.Category,
+                DateCreated = bp.Created
+            }).OrderByDescending(x => x.DateCreated).ToListAsync();
+
+        return await PagedList<BlogPostResponse>.ToPagedList(lisPost, pageParameters.PageNumber,
+            pageParameters.PageSize);
     }
 
     public async Task<BlogPost?> GetPostById(long id)
@@ -36,23 +48,48 @@ public class BlogService : IBlogService
         return post ?? null;
     }
 
-    public async Task<PagedList<BlogPost>> GetPostByTitle(string title, PageParameters pageParameters)
+    public async Task<PagedList<BlogPostResponse>> GetPostByTitle(string title, PageParameters pageParameters)
     {
-        var post = await _dataContext.BlogPosts.Where(b => b.Title.Contains(title))
-            .Include(b => b.Author)
-            .Include(b => b.Category)
-            .OrderBy(x => x.PostId).ToListAsync();
-        return await PagedList<BlogPost>.ToPagedList(post, pageParameters.PageNumber, pageParameters.PageSize);
+        var post = await (from  bp in _dataContext.BlogPosts.Where(x =>x.Title.Contains(title))
+            join  ar in _dataContext.Authors on 
+                bp.AuthorId equals  ar.AuthorId
+            select new BlogPostResponse
+            {
+                AuthorsName = ar.FirstName + "" + ar.LastName,
+                CoverImagePath = bp.CoverImagePath,
+                Title = bp.Summary,
+                Summary = bp.Summary,
+                Body = bp.Body,
+                Tags = bp.Tags,
+                Category = bp.Category,
+                DateCreated = bp.Created
+            }).OrderByDescending(x => x.DateCreated).ToListAsync();
+        var debug = post;
+        return await PagedList<BlogPostResponse>.ToPagedList(post, pageParameters.PageNumber, pageParameters.PageSize);
     }
 
-    public async Task<PagedList<BlogPost>> GetPostByAuthor(long id, PageParameters pageParameters)
+    public async Task<PagedList<BlogPostResponse>> GetPostByAuthor(PageParameters pageParameters, long id)
     {
-        var post = await _dataContext.BlogPosts
-            .Where(x => x.AuthorId == id).Include(x => x.Author)
-            .Include(x => x.Category)
-            .OrderBy(x => x.Title)
-            .ToListAsync();
-        return await PagedList<BlogPost>.ToPagedList(post, pageParameters.PageNumber, pageParameters.PageSize);
+        if (await _dataContext.Authors
+                .Where(x => x.AuthorId == id)
+                .SingleOrDefaultAsync() == null) return null; 
+       
+        var post = await (from bp in _dataContext.BlogPosts
+            join ar in _dataContext.Authors.Where(x=>x.AuthorId==id) on
+                bp.AuthorId equals ar.AuthorId
+            select new BlogPostResponse
+            {
+                AuthorsName = ar.FirstName + "" + ar.LastName,
+                CoverImagePath = bp.CoverImagePath,
+                Title = bp.Summary,
+                Summary = bp.Summary,
+                Body = bp.Body,
+                Tags = bp.Tags,
+                Category = bp.Category,
+                DateCreated = bp.Created
+            }).OrderByDescending(x => x.DateCreated).ToListAsync();
+
+        return await PagedList<BlogPostResponse>.ToPagedList(post, pageParameters.PageNumber, pageParameters.PageSize);
     }
 
     public async Task<BlogPost?> AddPost(BlogPost newPost)
@@ -76,26 +113,29 @@ public class BlogService : IBlogService
         await _dataContext.SaveChangesAsync();
     }
 
-    public async Task<Category?> GetCategoryByName(string categoryName)
+    public async Task<Category?> GetCategoryByName(string? categoryName)
     {
         return await _dataContext.Categories
-            .Where(x => x!.CategoryName.ToUpper() == categoryName.ToUpper())
+            .Where(x => x!.CategoryName!.ToUpper() == categoryName!.ToUpper())
             .Include(x => x!.BlogPosts).FirstOrDefaultAsync();
     }
 
-    public async Task<Category?> AddCategory(Category newCategory)
+    public async Task<Category?> AddCategory(Category category)
     {
-        var category = await GetCategoryByName(newCategory.CategoryName);
-        if (category != null)
-            return category;
+        var validateCategory = await GetCategoryByName(category.CategoryName);
+       
+        if (validateCategory != null)
+            return validateCategory;
 
-        var cat = new Category
+        var newCategory = new Category
         {
-            CategoryName = newCategory.CategoryName
+            CategoryName = category.CategoryName
         };
-        _dataContext.Categories.Add(cat);
+        
+        _dataContext.Categories.Add(newCategory);
         await _dataContext.SaveChangesAsync();
-        return category;
+        
+        return newCategory;
     }
 
     public Task<string> UploadFile(IFormFile file)
