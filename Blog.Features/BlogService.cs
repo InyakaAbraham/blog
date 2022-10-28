@@ -8,12 +8,10 @@ namespace Blog.Features;
 public class BlogService : IBlogService
 {
     private readonly DataContext _dataContext;
-    private readonly IUserService _userService;
 
-    public BlogService(DataContext dataContext, IUserService userService)
+    public BlogService(DataContext dataContext)
     {
         _dataContext = dataContext;
-        _userService = userService;
     }
 
     public async Task<PagedList<BlogPostResponse>> GetAllPosts(PageParameters pageParameters)
@@ -40,8 +38,8 @@ public class BlogService : IBlogService
     public async Task<BlogPost?> GetPostById(long id)
     {
         var post = await _dataContext.BlogPosts
-            .Where(x => x.PostId == id).Include(x => x!.Author)
-            .Include(x => x!.Category)
+            .Where(x => x.PostId == id).Include(x => x.Author)
+            .Include(x => x.Category)
             .OrderBy(x => x.PostId)
             .FirstOrDefaultAsync();
 
@@ -64,7 +62,7 @@ public class BlogService : IBlogService
                 Category = bp.Category,
                 DateCreated = bp.Created
             }).OrderByDescending(x => x.DateCreated).ToListAsync();
-        var debug = post;
+
         return await PagedList<BlogPostResponse>.ToPagedList(post, pageParameters.PageNumber, pageParameters.PageSize);
     }
 
@@ -116,8 +114,8 @@ public class BlogService : IBlogService
     public async Task<Category?> GetCategoryByName(string? categoryName)
     {
         return await _dataContext.Categories
-            .Where(x => x!.CategoryName!.ToUpper() == categoryName!.ToUpper())
-            .Include(x => x!.BlogPosts).FirstOrDefaultAsync();
+            .Where(x => x.CategoryName!.ToUpper() == categoryName!.ToUpper())
+            .Include(x => x.BlogPosts).FirstOrDefaultAsync();
     }
 
     public async Task<Category?> AddCategory(Category category)

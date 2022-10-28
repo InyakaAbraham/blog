@@ -58,12 +58,12 @@ public class UserService : IUserService
     public async Task<Author?> GetAuthorByEmailAddress(string emailAddress)
     {
         return await _dataContext.Authors.Include(x => x.Roles)
-            .SingleOrDefaultAsync(y => y!.EmailAddress == emailAddress);
+            .SingleOrDefaultAsync(y => y.EmailAddress == emailAddress);
     }
 
     public async Task<Author?> GetAuthorByUsername(string userName)
     {
-        return await _dataContext.Authors.SingleOrDefaultAsync(u => u!.Username == userName);
+        return await _dataContext.Authors.SingleOrDefaultAsync(u => u.Username == userName);
     }
 
     public async Task<Author?> GetAuthorById(long authorId)
@@ -160,7 +160,7 @@ public class UserService : IUserService
         
         author.EmailAddress = newEmailAddress;
         
-        _dataContext.Authors.Update(author!);
+        _dataContext.Authors.Update(author);
         await _dataContext.SaveChangesAsync();
         
         return true;
@@ -173,7 +173,7 @@ public class UserService : IUserService
         var claims = new List<Claim>
             { new("sub", author.AuthorId.ToString()), new("role", UserRole.Default.ToString()) };
 
-        claims.AddRange(author.Roles.Select(role => new Claim("role", role.Id.ToString())));
+        claims.AddRange(author.Roles.Select(role => new Claim("role", role!.Id.ToString())));
 
         return Task.FromResult(new JwtSecurityTokenHandler().WriteToken(
             new JwtSecurityToken
@@ -209,7 +209,7 @@ public class UserService : IUserService
             
         author.VerifiedAt = DateTime.UtcNow;
        
-        _dataContext.Authors.Update(author!);
+        _dataContext.Authors.Update(author);
         await _dataContext.SaveChangesAsync();
         
         return true;

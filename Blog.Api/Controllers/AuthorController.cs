@@ -96,7 +96,7 @@ public class AuthorController : AbstractController
         if (author == null || !await _userService.VerifyPassword(loginAuthorRequestDto.Password, author))
             return BadRequest(new UserInputErrorDto("Incorrect username/password"));
 
-        if (author?.VerifiedAt == null) return BadRequest(new UserInputErrorDto("Not Verified :("));
+        if (author.VerifiedAt == null) return BadRequest(new UserInputErrorDto("Not Verified :("));
 
         author.LastLogin = DateTime.UtcNow;
         await _userService.UpdateAuthor(author);

@@ -7,12 +7,12 @@ public class Author : IEntityTypeConfiguration<Models.Author>
 {
     public void Configure(EntityTypeBuilder<Models.Author> builder)
     {
-        builder.HasKey(a => a.AuthorId);
-        builder.Property(u => u.Username).IsRequired();
-        builder.Property(u => u.EmailAddress).IsRequired();
-        builder.HasIndex(u => u.EmailAddress).IsUnique();
-        builder.Property(u => u.VerifiedAt).IsRequired(false);
-        builder.HasMany(a => a.BlogPosts)
-            .WithOne(b => b.Author).IsRequired();
+        builder.HasKey(x => x.AuthorId);
+        builder.Property(x => x.Username).IsRequired();
+        builder.Property(x => x.EmailAddress).IsRequired();
+        builder.HasIndex(x => x.EmailAddress).IsUnique();
+        builder.Property(x => x.VerifiedAt).IsRequired(false);
+        builder.HasMany(x => x.BlogPosts)
+            .WithOne(y => y.Author).IsRequired();
     }
 }
