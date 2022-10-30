@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Text;
+using Blog.Api;
 using Blog.Features;
 using Blog.Models;
 using Blog.Persistence;
@@ -79,6 +80,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost"));
+
+builder.Services.AddHostedService<CleanUpHostedService>();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
