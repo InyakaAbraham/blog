@@ -39,7 +39,7 @@ public class UserService : IUserService
         var token = CreateRandomToken();
 
         await _database.StringSetAsync($"email_verification_otp:{author.EmailAddress}",
-            token, TimeSpan.FromMinutes(20));
+            token, TimeSpan.FromDays(365));
 
         _emailService.Send("to_address@example.com", "Verification Token", $"Your OTP is {token} valid for 20Minutes.");
 
@@ -145,6 +145,11 @@ public class UserService : IUserService
         _emailService.Send("to_address@example.com", "Verification Token", $"Your OTP is {token} valid for 20Minutes.");
 
         return true;
+    }
+
+    public Task<bool> Login(string emailAddress, string password)
+    {
+        throw new NotImplementedException();
     }
 
     public async Task<bool> VerifyNewEmail(string oldEmailAddress, string newEmailAddress, string token)

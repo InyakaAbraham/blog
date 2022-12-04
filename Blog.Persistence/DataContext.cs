@@ -18,6 +18,7 @@ public class DataContext : DbContext
     public DbSet<Author> Authors { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<Role> Roles { get; set; }
+    public DbSet<RecentActivities> Activities { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,5 +26,6 @@ public class DataContext : DbContext
         modelBuilder.ApplyConfiguration(new EntityTypeConfigurations.Category());
         modelBuilder.ApplyConfiguration(new EntityTypeConfigurations.Author());
         modelBuilder.ApplyConfiguration(new EntityTypeConfigurations.Role());
+        modelBuilder.ApplyConfiguration(new EntityTypeConfigurations.RecentActivities());
     }
 }
