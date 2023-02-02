@@ -115,10 +115,20 @@ public class AuthorController : AbstractController
         return Ok(new EmptySuccessResponseDto("Kindly Check email for OTP :)"));
     }
 
+    [HttpGet]
+    [ProducesResponseType(typeof(SuccessResponseDto<Author>), 200)]
+    public async Task<ActionResult<SuccessResponseDto<Author>>> GetAuthorById(long id)
+    {
+        if (await _userService.GetAuthorById(id) == null)
+            return BadRequest(new UserInputErrorDto("Not Found :("));
+        var author = await _userService.GetAuthorById(id);
+        return Ok(new SuccessResponseDto<Author>(author,"Kindly Check email for OTP :)"));
+    }
+    
     [HttpPatch]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
     public async Task<ActionResult<EmptySuccessResponseDto>> ResetPassword(
-        [FromForm] ResetPasswordRequestDto requestDto)
+        [FromBody] ResetPasswordRequestDto requestDto)
     {
         var result = await _resetPasswordRequestValidator.ValidateAsync(requestDto);
 

@@ -9,7 +9,7 @@ public class ResetPasswordRequestDtoValidator : AbstractValidator<ResetPasswordR
         RuleFor(x => x.emailAddress).EmailAddress();
         RuleFor(x => x.Token).Length(6);
         RuleFor(x => x.Password).MinimumLength(8);
-        RuleFor(x => x.ConfirmPassword)
+        RuleFor(x => x.confirmPassword)
             .Equal(x => x.Password)
             .MinimumLength(8).WithMessage("Password do not match");
     }

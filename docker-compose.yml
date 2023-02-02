@@ -1,0 +1,26 @@
+version: '3.0'
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: somewordpress
+      MYSQL_DATABASE: Blog
+      MYSQL_USER: root
+      MYSQL_PASSWORD: rootpass
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./_MySQL_Init_Script:/docker-entrypoint-initdb.d
+    restart: always
+    
+  blogapi:
+    depends_on:
+      - db
+    image: writers_meet:runtime
+    build:
+      context: .
+    ports:
+      - "5008:80"
+      
+volumes:
+  dbdata:

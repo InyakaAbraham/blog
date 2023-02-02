@@ -79,7 +79,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = false
         };
     });
-builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost"));
+// builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost"));
+var redisConfig = new ConfigurationOptions();
+redisConfig.AbortOnConnectFail = false;
+redisConfig.EndPoints.Add("localhost");
+builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisConfig));
 
 builder.Services.AddHostedService<CleanUpHostedService>();
 
