@@ -21,9 +21,10 @@ public class BlogService : IBlogService
                 bp.AuthorId equals ar.AuthorId
             select new BlogPostResponse
             {
-                AuthorsName = ar.FirstName + "" + ar.LastName,
+                PostId = bp.PostId,
+                AuthorsName = ar.FirstName + " " + ar.LastName,
                 CoverImagePath = bp.CoverImagePath,
-                Title = bp.Summary,
+                Title = bp.Title,
                 Summary = bp.Summary,
                 Body = bp.Body,
                 Tags = bp.Tags,
@@ -48,14 +49,15 @@ public class BlogService : IBlogService
 
     public async Task<PagedList<BlogPostResponse>> GetPostByTitle(string title, PageParameters pageParameters)
     {
-        var post = await (from  bp in _dataContext.BlogPosts.Where(x =>x.Title.Contains(title))
-            join  ar in _dataContext.Authors on 
-                bp.AuthorId equals  ar.AuthorId
+        var post = await (from bp in _dataContext.BlogPosts.Where(x => x.Title.Contains(title))
+            join ar in _dataContext.Authors on
+                bp.AuthorId equals ar.AuthorId
             select new BlogPostResponse
             {
-                AuthorsName = ar.FirstName + "" + ar.LastName,
+                PostId = bp.PostId,
+                AuthorsName = ar.FirstName + " " + ar.LastName,
                 CoverImagePath = bp.CoverImagePath,
-                Title = bp.Summary,
+                Title = bp.Title,
                 Summary = bp.Summary,
                 Body = bp.Body,
                 Tags = bp.Tags,
@@ -70,16 +72,17 @@ public class BlogService : IBlogService
     {
         if (await _dataContext.Authors
                 .Where(x => x.AuthorId == id)
-                .SingleOrDefaultAsync() == null) return null; 
-       
+                .SingleOrDefaultAsync() == null) return null;
+
         var post = await (from bp in _dataContext.BlogPosts
-            join ar in _dataContext.Authors.Where(x=>x.AuthorId==id) on
+            join ar in _dataContext.Authors.Where(x => x.AuthorId == id) on
                 bp.AuthorId equals ar.AuthorId
             select new BlogPostResponse
             {
-                AuthorsName = ar.FirstName + "" + ar.LastName,
+                PostId = bp.PostId,
+                AuthorsName = ar.FirstName + " " + ar.LastName,
                 CoverImagePath = bp.CoverImagePath,
-                Title = bp.Summary,
+                Title = bp.Title,
                 Summary = bp.Summary,
                 Body = bp.Body,
                 Tags = bp.Tags,
@@ -121,7 +124,7 @@ public class BlogService : IBlogService
     public async Task<Category?> AddCategory(Category category)
     {
         var validateCategory = await GetCategoryByName(category.CategoryName);
-       
+
         if (validateCategory != null)
             return validateCategory;
 
@@ -129,10 +132,10 @@ public class BlogService : IBlogService
         {
             CategoryName = category.CategoryName
         };
-        
+
         _dataContext.Categories.Add(newCategory);
         await _dataContext.SaveChangesAsync();
-        
+
         return newCategory;
     }
 

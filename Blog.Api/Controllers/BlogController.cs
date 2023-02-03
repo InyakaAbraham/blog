@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Blog.Api.Controllers;
 
 [Route("api/[controller]/[action]")]
-[Framework.Attributes.Authorize(UserRole.Default)]
+// [Framework.Attributes.Authorize(UserRole.Default)]
 [ProducesResponseType(typeof(UserNotAuthenticatedResponseDto), 401)]
 [ProducesResponseType(typeof(UserNotAuthorizedResponseDto), 403)]
 [ProducesResponseType(typeof(UserInputErrorDto), 400)]
@@ -45,7 +45,8 @@ public class BlogController : AbstractController
     [HttpGet("{id}")]
     [Framework.Attributes.Authorize(UserRole.Author)]
     [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
-    public async Task<ActionResult<PagedBlogPostResponseDto>> GetPostByAuthor([FromQuery] PageParameters pageParameters,long id)
+    public async Task<ActionResult<PagedBlogPostResponseDto>> GetPostByAuthor([FromQuery] PageParameters pageParameters,
+        long id)
     {
         var post = await _blogService.GetPostByAuthor(pageParameters, id);
         return Ok(new PagedBlogPostResponseDto(post, new PaginatedDto<List<BlogPostResponse>>.PageInformation
@@ -60,7 +61,7 @@ public class BlogController : AbstractController
     }
 
     [HttpGet("{id}")]
-    [Framework.Attributes.Authorize(UserRole.Administrator, UserRole.Moderator)]
+    // [Framework.Attributes.Authorize(UserRole.Administrator, UserRole.Moderator)]
     [ProducesResponseType(typeof(SuccessResponseDto<BlogPost>), 200)]
     public async Task<ActionResult<SuccessResponseDto<BlogPost>>> GetPostById(long id)
     {
@@ -136,9 +137,9 @@ public class BlogController : AbstractController
 
         var coverImagePath = await _blogService.UploadFile(updateBlogPost.CoverImage);
         var post = await _blogService.GetPostById(id);
-        
+
         if (post == null) return BadRequest(new UserInputErrorDto("No post with Id"));
-        
+
         post.Body = updateBlogPost.Body;
         post.Summary = updateBlogPost.Summary;
         post.Tags = updateBlogPost.Tags;

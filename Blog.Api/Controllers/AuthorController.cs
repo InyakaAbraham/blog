@@ -64,7 +64,7 @@ public class AuthorController : AbstractController
             PasswordHash = await passwordHash,
             CreatedAt = DateTime.UtcNow
         });
-        
+
         return Ok(new EmptySuccessResponseDto("Registration Successfully :)"));
     }
 
@@ -122,9 +122,9 @@ public class AuthorController : AbstractController
         if (await _userService.GetAuthorById(id) == null)
             return BadRequest(new UserInputErrorDto("Not Found :("));
         var author = await _userService.GetAuthorById(id);
-        return Ok(new SuccessResponseDto<Author>(author,"Kindly Check email for OTP :)"));
+        return Ok(new SuccessResponseDto<Author>(author));
     }
-    
+
     [HttpPatch]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
     public async Task<ActionResult<EmptySuccessResponseDto>> ResetPassword(

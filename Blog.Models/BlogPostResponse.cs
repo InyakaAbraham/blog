@@ -2,6 +2,7 @@ namespace Blog.Models;
 
 public class BlogPostResponse
 {
+    public long PostId { get; set; }
     public string AuthorsName { get; set; }
     public string CoverImagePath { get; set; }
     public string Title { get; set; }
