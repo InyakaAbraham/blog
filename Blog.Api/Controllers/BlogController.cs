@@ -41,6 +41,23 @@ public class BlogController : AbstractController
             HasPrevious = post.HasPrevious
         }));
     }
+    
+    [HttpGet]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
+    public async Task<ActionResult<PagedBlogPostResponseDto>> GetRecentPost([FromQuery] PageParameters pageParameters)
+    {
+        var post = await _blogService.GetRecentPost(pageParameters);
+        return Ok(new PagedBlogPostResponseDto(post, new PaginatedDto<List<BlogPostResponse>>.PageInformation
+        {
+            TotalPages = post.TotalPages,
+            TotalCount = post.TotalCount,
+            CurrentPage = post.CurrentPage,
+            PageSize = post.PageSize,
+            HasNext = post.HasNext,
+            HasPrevious = post.HasPrevious
+        }));
+    }
 
     [HttpGet("{id}")]
     [Framework.Attributes.Authorize(UserRole.Author)]

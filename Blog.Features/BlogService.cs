@@ -35,7 +35,27 @@ public class BlogService : IBlogService
         return await PagedList<BlogPostResponse>.ToPagedList(lisPost, pageParameters.PageNumber,
             pageParameters.PageSize);
     }
+    public async Task<PagedList<BlogPostResponse>> GetRecentPost(PageParameters pageParameters)
+    {
+        var lisPost = await (from bp in _dataContext.Set<BlogPost>()
+            join ar in _dataContext.Set<Author>() on
+                bp.AuthorId equals ar.AuthorId
+            select new BlogPostResponse
+            {
+                PostId = bp.PostId,
+                AuthorsName = ar.FirstName + " " + ar.LastName,
+                CoverImagePath = bp.CoverImagePath,
+                Title = bp.Title,
+                Summary = bp.Summary,
+                Body = bp.Body,
+                Tags = bp.Tags,
+                Category = bp.Category,
+                DateCreated = bp.Created
+            }).OrderByDescending(x => x.DateCreated).Take(3).ToListAsync();
 
+        return await PagedList<BlogPostResponse>.ToPagedList(lisPost, pageParameters.PageNumber,
+            pageParameters.PageSize);
+    }
     public async Task<BlogPost?> GetPostById(long id)
     {
         var post = await _dataContext.BlogPosts
