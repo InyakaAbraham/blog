@@ -78,7 +78,7 @@ public class BlogController : AbstractController
     }
 
     [HttpGet("{id}")]
-    // [Framework.Attributes.Authorize(UserRole.Administrator, UserRole.Moderator)]
+    [Framework.Attributes.Authorize(UserRole.Author)]
     [ProducesResponseType(typeof(SuccessResponseDto<BlogPost>), 200)]
     public async Task<ActionResult<SuccessResponseDto<BlogPost>>> GetPostById(long id)
     {
@@ -110,9 +110,9 @@ public class BlogController : AbstractController
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
     public async Task<ActionResult<EmptySuccessResponseDto>> AddPost([FromForm] NewBlogPostDto newBlogPost)
     {
-        var result = await _validator.ValidateAsync(newBlogPost);
+        // var result = await _validator.ValidateAsync(newBlogPost);
 
-        if (!result.IsValid) return BadRequest(new UserInputErrorDto(result));
+        // if (!result.IsValid) return BadRequest(new UserInputErrorDto(result));
 
         var authorId = GetContextUserId();
         var author = await _userService.GetAuthorById(authorId);
@@ -132,7 +132,7 @@ public class BlogController : AbstractController
             AuthorId = authorId,
             Tags = newBlogPost.Tags,
             Author = author,
-            Updated = newBlogPost.Updated,
+            Updated = DateTime.UtcNow,
             Created = DateTime.UtcNow
         });
 
@@ -142,8 +142,8 @@ public class BlogController : AbstractController
     }
 
 
-    [HttpPatch]
-    [Framework.Attributes.Authorize(UserRole.Administrator, UserRole.Moderator)]
+    [HttpPut]
+    [Framework.Attributes.Authorize(UserRole.Author)]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
     public async Task<ActionResult<EmptySuccessResponseDto>> UpdatePost([FromForm] NewBlogPostDto updateBlogPost,
         long id)
@@ -170,7 +170,7 @@ public class BlogController : AbstractController
     }
 
     [HttpDelete("{id}")]
-    [Framework.Attributes.Authorize(UserRole.Administrator)]
+    [Framework.Attributes.Authorize(UserRole.Author)]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
     public async Task<ActionResult<EmptySuccessResponseDto>> DeletePost(long id)
     {

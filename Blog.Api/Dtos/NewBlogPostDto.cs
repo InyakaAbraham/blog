@@ -11,5 +11,4 @@ public class NewBlogPostDto
     [Required] public string Body { get; set; }
     [Required] public string? Tags { get; set; }
     [Required] public string CategoryName { get; set; }
-    [JsonIgnore] public DateTime Updated { get; init; }
 }
