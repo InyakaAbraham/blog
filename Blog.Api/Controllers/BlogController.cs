@@ -41,7 +41,7 @@ public class BlogController : AbstractController
             HasPrevious = post.HasPrevious
         }));
     }
-    
+
     [HttpGet]
     [AllowAnonymous]
     [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
@@ -110,9 +110,9 @@ public class BlogController : AbstractController
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
     public async Task<ActionResult<EmptySuccessResponseDto>> AddPost([FromForm] NewBlogPostDto newBlogPost)
     {
-        // var result = await _validator.ValidateAsync(newBlogPost);
+        var result = await _validator.ValidateAsync(newBlogPost);
 
-        // if (!result.IsValid) return BadRequest(new UserInputErrorDto(result));
+        if (!result.IsValid) return BadRequest(new UserInputErrorDto(result));
 
         var authorId = GetContextUserId();
         var author = await _userService.GetAuthorById(authorId);
@@ -138,7 +138,7 @@ public class BlogController : AbstractController
 
         if (blogPost == null) return BadRequest(new UserInputErrorDto("Enter post in valid format :("));
 
-        return Ok(new EmptySuccessResponseDto("Post Created :)"));
+        return Ok(new EmptySuccessResponseDto("Post Created Successfully! :)"));
     }
 
 
@@ -166,7 +166,7 @@ public class BlogController : AbstractController
 
         await _blogService.UpdatePost(post);
 
-        return Ok(new EmptySuccessResponseDto("Post updated :)"));
+        return Ok(new EmptySuccessResponseDto("Post updated Successfully! :)"));
     }
 
     [HttpDelete("{id}")]

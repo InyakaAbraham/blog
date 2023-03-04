@@ -113,7 +113,7 @@ public class BlogService : IBlogService
         return await PagedList<BlogPostResponse>.ToPagedList(post, pageParameters.PageNumber, pageParameters.PageSize);
     }
 
-    public async Task<BlogPost?> AddPost(BlogPost newPost)
+    public async Task<BlogPost> AddPost(BlogPost newPost)
     {
         _dataContext.BlogPosts.Add(newPost);
         await _dataContext.SaveChangesAsync();

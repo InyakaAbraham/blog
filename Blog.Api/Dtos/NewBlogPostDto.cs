@@ -9,6 +9,6 @@ public class NewBlogPostDto
     [Required] public string Title { get; set; }
     [Required] public string Summary { get; set; }
     [Required] public string Body { get; set; }
-    [Required] public string? Tags { get; set; }
+    [Required] public string Tags { get; set; }
     [Required] public string CategoryName { get; set; }
 }
