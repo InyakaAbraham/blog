@@ -206,7 +206,7 @@ public class AuthorController : AbstractController
         var usernameCheck = await _userService.GetAuthorByUsername(request.Username);
 
         if (author == null) return BadRequest("Kindly login to edit profile :)");
-        if (usernameCheck != null && request.Username!=author.Username) return BadRequest("Username already Exists");
+        if (usernameCheck != null && request.Username != author.Username) return BadRequest("Username already Exists");
 
         author.Username = request.Username;
         author.FirstName = request.FirstName;

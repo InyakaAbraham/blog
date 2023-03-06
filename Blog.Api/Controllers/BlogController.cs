@@ -80,11 +80,23 @@ public class BlogController : AbstractController
     [HttpGet("{id}")]
     [Framework.Attributes.Authorize(UserRole.Author)]
     [ProducesResponseType(typeof(SuccessResponseDto<BlogPost>), 200)]
-    public async Task<ActionResult<SuccessResponseDto<BlogPost>>> GetPostById(long id)
+    public async Task<ActionResult<SuccessResponseDto<BlogPostResponse>>> GetPostById(long id)
     {
         var blogPost = await _blogService.GetPostById(id);
+        var respnse = new BlogPostResponse
+        {
+            Body = blogPost.Body,
+            Summary = blogPost.Summary,
+            Category = blogPost.Category,
+            Tags = blogPost.Tags,
+            Title = blogPost.Title,
+            CoverImagePath = blogPost.CoverImagePath,
+            AuthorsName = blogPost.Author.FirstName +" "+ blogPost.Author.LastName,
+            DateCreated = blogPost.Created,
+            PostId = blogPost.PostId
+        };
         if (blogPost == null) return NotFound(new { error = "Not Found :/" });
-        return Ok(new SuccessResponseDto<BlogPost>(blogPost));
+        return Ok(new SuccessResponseDto<BlogPostResponse>(respnse));
     }
 
     [HttpGet("{title}")]
@@ -138,7 +150,7 @@ public class BlogController : AbstractController
 
         if (blogPost == null) return BadRequest(new UserInputErrorDto("Enter post in valid format :("));
 
-        return Ok(new EmptySuccessResponseDto("Post Created Successfully! :)"));
+        return Ok(new EmptySuccessResponseDto("Post Created Successfully!"));
     }
 
 
@@ -166,7 +178,7 @@ public class BlogController : AbstractController
 
         await _blogService.UpdatePost(post);
 
-        return Ok(new EmptySuccessResponseDto("Post updated Successfully! :)"));
+        return Ok(new EmptySuccessResponseDto("Post Updated Successfully!"));
     }
 
     [HttpDelete("{id}")]
@@ -175,6 +187,6 @@ public class BlogController : AbstractController
     public async Task<ActionResult<EmptySuccessResponseDto>> DeletePost(long id)
     {
         await _blogService.DeletePost(id);
-        return Ok(new EmptySuccessResponseDto("Post Deleted :("));
+        return Ok(new EmptySuccessResponseDto("Post Deleted!"));
     }
 }
