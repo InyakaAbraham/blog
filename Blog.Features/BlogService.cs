@@ -67,9 +67,9 @@ public class BlogService : IBlogService
         return post ?? null;
     }
 
-    public async Task<PagedList<BlogPostResponse>> GetPostByTitle(string title, PageParameters pageParameters)
+    public async Task<PagedList<BlogPostResponse>> GetPostByTag(string tag, PageParameters pageParameters)
     {
-        var post = await (from bp in _dataContext.BlogPosts.Where(x => x.Title.Contains(title))
+        var post = await (from bp in _dataContext.BlogPosts.Where(x => x.Tags.Contains(tag))
             join ar in _dataContext.Authors on
                 bp.AuthorId equals ar.AuthorId
             select new BlogPostResponse

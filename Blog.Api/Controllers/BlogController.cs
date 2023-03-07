@@ -102,10 +102,10 @@ public class BlogController : AbstractController
     [HttpGet("{title}")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
-    public async Task<ActionResult<PagedBlogPostResponseDto>> GetPostByTitle(string title,
+    public async Task<ActionResult<PagedBlogPostResponseDto>> GetPostByTag(string tag,
         [FromQuery] PageParameters pageParameters)
     {
-        var post = await _blogService.GetPostByTitle(title, pageParameters);
+        var post = await _blogService.GetPostByTag(tag, pageParameters);
         return Ok(new PagedBlogPostResponseDto(post, new PaginatedDto<List<BlogPostResponse>>.PageInformation
         {
             HasNext = post.HasNext,
