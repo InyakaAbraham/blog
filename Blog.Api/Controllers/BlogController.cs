@@ -99,7 +99,7 @@ public class BlogController : AbstractController
         return Ok(new SuccessResponseDto<BlogPostResponse>(respnse));
     }
 
-    [HttpGet("{title}")]
+    [HttpGet("{tag}")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
     public async Task<ActionResult<PagedBlogPostResponseDto>> GetPostByTag(string tag,
