@@ -7,10 +7,11 @@ public interface IBlogService
 {
     public Task<PagedList<BlogPostResponse>> GetAllPosts(PageParameters pageParameters);
     public Task<PagedList<BlogPostResponse>> GetRecentPost(PageParameters pageParameters);
-    public Task<BlogPost?> GetPostById(long id);
+    public Task<BlogPostResponse?> GetPostById(long id);
+    public Task<BlogPost?> GetPost(long id);
     public Task<PagedList<BlogPostResponse>> GetPostByTag(string title, PageParameters pageParameters);
     public Task<PagedList<BlogPostResponse>> GetPostByAuthor(PageParameters pageParameters, long id);
-    public Task<BlogPost?> AddPost(BlogPost newPost);
+    public Task<bool> AddPost(BlogPost newPost);
     public Task<BlogPost?> UpdatePost(BlogPost updatePost);
     public Task DeletePost(long id);
     public Task<Category?> GetCategoryByName(string? categoryName);

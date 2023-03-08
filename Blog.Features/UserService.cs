@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -31,46 +32,87 @@ public class UserService : IUserService
         _database = redis.GetDatabase();
     }
 
-    public async Task<Author> CreateUser(Author author)
+    public async Task<Author?> CreateUser(Author author)
     {
-        author.Roles = new List<Role?>
-            { await _dataContext.Roles.SingleOrDefaultAsync(x => x.Id == UserRole.Author) };
+        try
+        {
+            author.Roles = new List<Role?>
+                { await _dataContext.Roles.SingleOrDefaultAsync(x => x.Id == UserRole.Author) };
 
-        var token = CreateRandomToken();
+            var token = CreateRandomToken();
 
-        await _database.StringSetAsync($"email_verification_otp:{author.EmailAddress}",
-            token, TimeSpan.FromDays(365));
+            await _database.StringSetAsync($"email_verification_otp:{author.EmailAddress}",
+                token, TimeSpan.FromDays(365));
 
-        _emailService.Send("to_address@example.com", "Verification Token", $"Your OTP is {token} valid for 20Minutes.");
+            _emailService.Send("to_address@example.com", "Verification Token", $"Your OTP is {token} valid for 20Minutes.");
 
-        _dataContext.Authors.Add(author);
-        await _dataContext.SaveChangesAsync();
-        return author;
+            _dataContext.Authors.Add(author);
+            await _dataContext.SaveChangesAsync();
+            return author;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An exception occurred: {ex.Message}");
+            return null;
+        }
     }
 
     public async Task<Author> UpdateAuthor(Author author)
     {
-        _dataContext.Authors.Update(author);
-        await _dataContext.SaveChangesAsync();
-        return author;
+        try
+        {
+            _dataContext.Authors.Update(author);
+            await _dataContext.SaveChangesAsync();
+            return author;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An exception occurred: {ex.Message}");
+            return null;
+        }
     }
 
     public async Task<Author?> GetAuthorByEmailAddress(string emailAddress)
     {
-        return await _dataContext.Authors.Include(x => x.Roles)
-            .SingleOrDefaultAsync(y => y.EmailAddress == emailAddress);
+        try
+        {
+            return await _dataContext.Authors.Include(x => x.Roles)
+                .SingleOrDefaultAsync(y => y.EmailAddress == emailAddress);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An exception occurred: {ex.Message}");
+            return null;
+        }
     }
 
     public async Task<Author?> GetAuthorByUsername(string userName)
     {
-        return await _dataContext.Authors.SingleOrDefaultAsync(u => u.Username == userName);
+        try
+        {
+            return await _dataContext.Authors.SingleOrDefaultAsync(u => u.Username == userName);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An exception occurred: {ex.Message}");
+            return null;
+        }
     }
 
     public async Task<Author?> GetAuthorById(long authorId)
     {
-        return await _dataContext.Authors.Where(a => a.AuthorId == authorId)
-            .Include(a => a.BlogPosts)
-            .SingleOrDefaultAsync();
+        try
+        {
+            return await _dataContext.Authors.Where(a => a.AuthorId == authorId)
+                .Include(a => a.BlogPosts)
+                .SingleOrDefaultAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An exception occurred: {ex.Message}");
+            return null;
+        }
+
     }
 
     public async Task<string?> CreatePasswordHash(string password)
@@ -78,115 +120,167 @@ public class UserService : IUserService
         return await Task.FromResult(BCrypt.Net.BCrypt.HashPassword(password));
     }
 
-    public Task<bool> VerifyPassword(string password, Author author)
+    public async Task<bool> VerifyPassword(string password, Author author)
     {
-        return Task.FromResult(BCrypt.Net.BCrypt.Verify(password, author.PasswordHash));
+        try
+        {
+            return await Task.FromResult(BCrypt.Net.BCrypt.Verify(password, author.PasswordHash));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An exception occurred: {ex.Message}");
+            return false;
+        }
     }
 
     public async Task<bool> ForgotPassword(string emailAddress)
     {
-        var author = await GetAuthorByEmailAddress(emailAddress);
-        if (author == null) return false;
+        try
+        {
+            var author = await GetAuthorByEmailAddress(emailAddress);
+            if (author == null) return false;
 
-        var token = CreateRandomToken();
+            var token = CreateRandomToken();
 
-        await _database.StringSetAsync($"email_reset_otp:{emailAddress}",
-            token, TimeSpan.FromMinutes(20));
-        _emailService.Send("to_address@example.com", "Reset Token", $" Your OTP is {token} valid for 20Minutes.");
+            await _database.StringSetAsync($"email_reset_otp:{emailAddress}",
+                token, TimeSpan.FromMinutes(20));
+            _emailService.Send("to_address@example.com", "Reset Token", $" Your OTP is {token} valid for 20Minutes.");
 
-        return true;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An exception occurred: {ex.Message}");
+            return false;
+        }
     }
 
     public async Task<bool> ResetPassword(string emailAddress, string token, string password)
     {
-        var user = await GetAuthorByEmailAddress(emailAddress);
-        if (user == null) return false;
+        try
+        {
+            var user = await GetAuthorByEmailAddress(emailAddress);
+            if (user == null) return false;
 
-        var validateToken = await _database.StringGetAsync($"email_reset_otp:{emailAddress}");
-        if (validateToken != token) return false;
+            var validateToken = await _database.StringGetAsync($"email_reset_otp:{emailAddress}");
+            if (validateToken != token) return false;
 
-        var passwordHash = await CreatePasswordHash(password);
-        user.PasswordHash = passwordHash;
-        await UpdateAuthor(user);
-        
-        return true;
+            var passwordHash = await CreatePasswordHash(password);
+            user.PasswordHash = passwordHash;
+            await UpdateAuthor(user);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An exception occurred: {ex.Message}");
+            return false;
+        }
     }
 
     public async Task<bool> ChangePassword(string password, string newPassword, string emailAddress)
     {
-        var author = await GetAuthorByEmailAddress(emailAddress);
-        var validatePassword = await VerifyPassword(password, author!);
+        try
+        {
+            var author = await GetAuthorByEmailAddress(emailAddress);
+            var validatePassword = await VerifyPassword(password, author!);
 
-        if (!validatePassword) return false;
-        
-        var passwordHash = await CreatePasswordHash(newPassword);
+            if (!validatePassword) return false;
 
-        author!.PasswordHash = passwordHash;
-       
-        _dataContext.Authors.Update(author);
-        await _dataContext.SaveChangesAsync();
+            var passwordHash = await CreatePasswordHash(newPassword);
 
-        return true;
+            author!.PasswordHash = passwordHash;
+
+            _dataContext.Authors.Update(author);
+            await _dataContext.SaveChangesAsync();
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An exception occurred: {ex.Message}");
+            return false;
+        }
     }
 
     public async Task<bool> ChangeEmailAddress(string oldEmailAddress, string password)
     {
-        var author = await GetAuthorByEmailAddress(oldEmailAddress);
-        if (author == null) return false;
+        try
+        {
+            var author = await GetAuthorByEmailAddress(oldEmailAddress);
+            if (author == null) return false;
 
-        var validateAuthor = await VerifyPassword(password, author);
-        if (!validateAuthor) return false;
+            var validateAuthor = await VerifyPassword(password, author);
+            if (!validateAuthor) return false;
 
-        var token = CreateRandomToken();
+            var token = CreateRandomToken();
 
-        await _database.StringSetAsync($"email_change_otp:{author.EmailAddress}",
-            token, TimeSpan.FromMinutes(20));
+            await _database.StringSetAsync($"email_change_otp:{author.EmailAddress}",
+                token, TimeSpan.FromMinutes(20));
 
-        _emailService.Send("to_address@example.com", "Verification Token", $"Your OTP is {token} valid for 20Minutes.");
+            _emailService.Send("to_address@example.com", "Verification Token", $"Your OTP is {token} valid for 20Minutes.");
 
-        return true;
-    }
-
-    public Task<bool> Login(string emailAddress, string password)
-    {
-        throw new NotImplementedException();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An exception occurred: {ex.Message}");
+            return false;
+        }
     }
 
     public async Task<bool> VerifyNewEmail(string oldEmailAddress, string newEmailAddress, string token)
     {
-        var newEmailAddressCheck = await GetAuthorByEmailAddress(newEmailAddress);
-        if (newEmailAddressCheck != null) return false;
+        try
+        {
+            var newEmailAddressCheck = await GetAuthorByEmailAddress(newEmailAddress);
+            if (newEmailAddressCheck != null) return false;
 
-        var validateToken = await _database.StringGetAsync($"email_change_otp:{oldEmailAddress}");
-        if (validateToken != token) return false;
-       
-        var author = await GetAuthorByEmailAddress(oldEmailAddress);
-        if (author == null) return false;
-        
-        author.EmailAddress = newEmailAddress;
-        
-        _dataContext.Authors.Update(author);
-        await _dataContext.SaveChangesAsync();
-        
-        return true;
+            var validateToken = await _database.StringGetAsync($"email_change_otp:{oldEmailAddress}");
+            if (validateToken != token) return false;
+
+            var author = await GetAuthorByEmailAddress(oldEmailAddress);
+            if (author == null) return false;
+
+            author.EmailAddress = newEmailAddress;
+
+            _dataContext.Authors.Update(author);
+            await _dataContext.SaveChangesAsync();
+
+            return true;
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine($"An exception occurred: {ex.Message}");
+            return false;
+        }
     }
+
 
     public Task<string> CreateJwtToken(Author author)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appSettings.JwtSecret));
-        var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-        var claims = new List<Claim>
-            { new("sub", author.AuthorId.ToString()), new("role", UserRole.Default.ToString()) };
+        try
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appSettings.JwtSecret));
+            var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+            var claims = new List<Claim>
+                { new("sub", author.AuthorId.ToString()), new("role", UserRole.Default.ToString()) };
 
-        claims.AddRange(author.Roles.Select(role => new Claim("role", role!.Id.ToString())));
+            claims.AddRange(author.Roles.Select(role => new Claim("role", role!.Id.ToString())));
 
-        return Task.FromResult(new JwtSecurityTokenHandler().WriteToken(
-            new JwtSecurityToken
-            (
-                claims: claims,
-                expires: DateTime.Now.AddDays(1),
-                signingCredentials: cred
-            )));
+            return Task.FromResult(new JwtSecurityTokenHandler().WriteToken(
+                new JwtSecurityToken
+                (
+                    claims: claims,
+                    expires: DateTime.Now.AddDays(1),
+                    signingCredentials: cred
+                )));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An exception occurred: {ex.Message}");
+            return null;
+        }
     }
 
     public string CreateRandomToken()
@@ -204,20 +298,25 @@ public class UserService : IUserService
 
     public async Task<bool> VerifyAuthor(string emailAddress, string token)
     {
-        var validateToken = await _database.StringGetAsync($"email_verification_otp:{emailAddress}");
+        try
+        {
+            var validateToken = await _database.StringGetAsync($"email_verification_otp:{emailAddress}");
+            if (validateToken != token) return false;
 
-        if (validateToken != token) return false;
-        
-        var author = await GetAuthorByEmailAddress(emailAddress);
-        
-        if (author == null) return false;
-            
-        author.VerifiedAt = DateTime.UtcNow;
-       
-        _dataContext.Authors.Update(author);
-        await _dataContext.SaveChangesAsync();
-        
-        return true;
+            var author = await GetAuthorByEmailAddress(emailAddress);
+            if (author == null) return false;
 
+            author.VerifiedAt = DateTime.UtcNow;
+
+            _dataContext.Authors.Update(author);
+            await _dataContext.SaveChangesAsync();
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An exception occurred: {ex.Message}");
+            return false;
+        }
     }
 }

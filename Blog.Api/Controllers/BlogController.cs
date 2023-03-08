@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Blog.Api.Dtos;
 using Blog.Features;
 using Blog.Models;
@@ -83,20 +84,8 @@ public class BlogController : AbstractController
     public async Task<ActionResult<SuccessResponseDto<BlogPostResponse>>> GetPostById(long id)
     {
         var blogPost = await _blogService.GetPostById(id);
-        var respnse = new BlogPostResponse
-        {
-            Body = blogPost.Body,
-            Summary = blogPost.Summary,
-            Category = blogPost.Category,
-            Tags = blogPost.Tags,
-            Title = blogPost.Title,
-            CoverImagePath = blogPost.CoverImagePath,
-            AuthorsName = blogPost.Author.FirstName +" "+ blogPost.Author.LastName,
-            DateCreated = blogPost.Created,
-            PostId = blogPost.PostId
-        };
         if (blogPost == null) return NotFound(new { error = "Not Found :/" });
-        return Ok(new SuccessResponseDto<BlogPostResponse>(respnse));
+        return Ok(new SuccessResponseDto<BlogPostResponse>(blogPost));
     }
 
     [HttpGet("{tag}")]
@@ -148,7 +137,7 @@ public class BlogController : AbstractController
             Created = DateTime.UtcNow
         });
 
-        if (blogPost == null) return BadRequest(new UserInputErrorDto("Enter post in valid format :("));
+        if (!blogPost) return BadRequest(new UserInputErrorDto("Enter post in valid format :("));
 
         return Ok(new EmptySuccessResponseDto("Post Created Successfully!"));
     }
@@ -165,7 +154,7 @@ public class BlogController : AbstractController
         if (!result.IsValid) return BadRequest(new UserInputErrorDto(result));
 
         var coverImagePath = await _blogService.UploadFile(updateBlogPost.CoverImage);
-        var post = await _blogService.GetPostById(id);
+        var post = await _blogService.GetPost(id);
 
         if (post == null) return BadRequest(new UserInputErrorDto("No post with Id"));
 

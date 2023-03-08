@@ -4,7 +4,7 @@ namespace Blog.Api;
 
 public class CleanUpHostedService:BackgroundService, IDisposable
 {
-    
+
     private readonly ILogger<CleanUpHostedService> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly PeriodicTimer _timer;
@@ -14,9 +14,9 @@ public class CleanUpHostedService:BackgroundService, IDisposable
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
-        _timer = new PeriodicTimer(TimeSpan.FromSeconds(2));
+        _timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
     }
-   
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
@@ -25,11 +25,11 @@ public class CleanUpHostedService:BackgroundService, IDisposable
 
             using var scope = _serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<DataContext>();
-           
+
             while (await _timer.WaitForNextTickAsync(stoppingToken))
             {
                 OnTick(context);
-                
+
             }
         }
     }
@@ -40,15 +40,15 @@ public class CleanUpHostedService:BackgroundService, IDisposable
 
         return base.StopAsync(cancellationToken);
     }
-    
+
     private void OnTick(DataContext context)
     {
         _logger.LogInformation("Timer ticked at {Now}", DateTime.Now);
-        _logger.LogInformation("Number of Admins {Count}", context.Authors.Count());
-        //Get all the token from customer table that has 
+        _logger.LogInformation("Number of Users {Count}", context.Authors.Count());
+        //Get all the token from customer table that has
 
     }
-    
+
     public sealed override void Dispose()
     {
         _timer.Dispose();
