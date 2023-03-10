@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Domain.Blog.Queries;
 
-public class BlogQueryHandler: IRequestHandler<BlogQueryRequest, PagedList<BlogQueryResponse>>
+public class BlogQueryHandler: IRequestHandler<BlogQueryRequest, List<BlogQueryResponse>>
 {
     private readonly DataContext _dataContext;
     public BlogQueryHandler(DataContext dataContext)
@@ -13,7 +13,7 @@ public class BlogQueryHandler: IRequestHandler<BlogQueryRequest, PagedList<BlogQ
         _dataContext = dataContext;
     }
 
-    public async Task<PagedList<BlogQueryResponse>> Handle(BlogQueryRequest request, CancellationToken cancellationToken)
+    public async Task<List<BlogQueryResponse>> Handle(BlogQueryRequest request, CancellationToken cancellationToken)
     {
         if (request.AllPost==true && string.IsNullOrEmpty(request.Tag) && request.Id==null)
         {
@@ -32,8 +32,9 @@ public class BlogQueryHandler: IRequestHandler<BlogQueryRequest, PagedList<BlogQ
                         Tags = bp.Tags,
                         Category = bp.Category,
                         DateCreated = bp.Created
-                    }).OrderByDescending(x => x.DateCreated).ToListAsync();
-                return await PagedList<BlogQueryResponse>.ToPagedList(listPost, request.PageParameters.PageNumber, request.PageParameters.PageSize);
+                    }).OrderByDescending(x => x.DateCreated).ToListAsync(cancellationToken: cancellationToken);
+                return  listPost;
+                // return await PagedList<BlogQueryResponse>.ToPagedList(listPost, request.PageParameters.PageNumber, request.PageParameters.PageSize);
             }
             catch (Exception ex)
             {
