@@ -33,7 +33,7 @@ public class BlogController : AbstractController
     [HttpGet]
     [AllowAnonymous]
     [ProducesResponseType(typeof(BlogQueryResponse), 200)]
-    public async Task<ActionResult<BlogQueryResponse>> GetAllPosts([FromBody]BlogQueryRequest blogQueryRequest, CancellationToken cancellationToken )
+    public async Task<ActionResult<BlogQueryResponse>> GetAllPosts(BlogQueryRequest blogQueryRequest, CancellationToken cancellationToken )
     {
         // var post = await _blogService.GetAllPosts(pageParameters);
         // return Ok(new PagedBlogPostResponseDto(post, new PaginatedDto<List<BlogPostResponse>>.PageInformation

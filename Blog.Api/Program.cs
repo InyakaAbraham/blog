@@ -7,6 +7,7 @@ using Blog.Features;
 using Blog.Models;
 using Blog.Persistence;
 using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -16,7 +17,7 @@ using StackExchange.Redis;
 
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.AddMediatR(typeof(BlogQueryHandler).Assembly);
 // var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
 builder.Services.AddCors(options =>
 {
