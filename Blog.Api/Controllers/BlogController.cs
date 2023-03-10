@@ -33,25 +33,15 @@ public class BlogController : AbstractController
     [HttpGet]
     [AllowAnonymous]
     [ProducesResponseType(typeof(BlogQueryResponse), 200)]
-    public async Task<ActionResult<List<BlogQueryResponse>>> GetAllPosts(BlogQueryRequest blogQueryRequest, CancellationToken cancellationToken )
+    public async Task<ActionResult<List<BlogQueryResponse>>> GetAllPosts(CancellationToken cancellationToken )
     {
-        // var post = await _blogService.GetAllPosts(pageParameters);
-        // return Ok(new PagedBlogPostResponseDto(post, new PaginatedDto<List<BlogPostResponse>>.PageInformation
-        // {
-        //     TotalPages = post.TotalPages,
-        //     TotalCount = post.TotalCount,
-        //     CurrentPage = post.CurrentPage,
-        //     PageSize = post.PageSize,
-        //     HasNext = post.HasNext,
-        //     HasPrevious = post.HasPrevious
-        // }));
-
         var request = new BlogQueryRequest()
         {
-          PageParameters = blogQueryRequest.PageParameters,
-          Id = blogQueryRequest.Id,
-          AllPost = blogQueryRequest.AllPost,
-          Tag = blogQueryRequest.Tag
+          PageParameters =null,
+          AuthorId =null,
+          AllPost = true,
+          Tag = null,
+          PostId = null
         };
 
         var response = await _mediator.Send(request, cancellationToken);
@@ -61,68 +51,73 @@ public class BlogController : AbstractController
     [HttpGet]
     [AllowAnonymous]
     [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
-    public async Task<ActionResult<PagedBlogPostResponseDto>> GetRecentPost([FromQuery] PageParameters pageParameters)
+    public async Task<ActionResult<List<BlogQueryResponse>>> GetRecentPost(CancellationToken cancellationToken )
     {
-        var post = await _blogService.GetRecentPost(pageParameters);
-        return Ok(new PagedBlogPostResponseDto(post, new PaginatedDto<List<BlogPostResponse>>.PageInformation
+        var request = new BlogQueryRequest()
         {
-            TotalPages = post.TotalPages,
-            TotalCount = post.TotalCount,
-            CurrentPage = post.CurrentPage,
-            PageSize = post.PageSize,
-            HasNext = post.HasNext,
-            HasPrevious = post.HasPrevious
-        }));
+            PageParameters =null,
+            AuthorId =null,
+            AllPost = false,
+            Tag = null,
+            PostId = null
+        };
+        var response = await _mediator.Send(request, cancellationToken);
+        return Ok(response);
     }
 
-    [HttpGet("{id}")]
-    [Framework.Attributes.Authorize(UserRole.Author)]
-    [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
-    public async Task<ActionResult<PagedBlogPostResponseDto>> GetPostByAuthor([FromQuery] PageParameters pageParameters,
-        long id)
-    {
-        var post = await _blogService.GetPostByAuthor(pageParameters, id);
-        return Ok(new PagedBlogPostResponseDto(post, new PaginatedDto<List<BlogPostResponse>>.PageInformation
-        {
-            HasNext = post.HasNext,
-            CurrentPage = post.CurrentPage,
-            HasPrevious = post.HasPrevious,
-            PageSize = post.PageSize,
-            TotalCount = post.TotalCount,
-            TotalPages = post.TotalPages
-        }));
-    }
-
-    [HttpGet("{id}")]
-    [Framework.Attributes.Authorize(UserRole.Author)]
-    [ProducesResponseType(typeof(SuccessResponseDto<BlogPost>), 200)]
-    public async Task<ActionResult<SuccessResponseDto<BlogPostResponse>>> GetPostById(long id)
-    {
-        var blogPost = await _blogService.GetPostById(id);
-        if (blogPost == null) return NotFound(new { error = "Not Found :/" });
-        return Ok(new SuccessResponseDto<BlogPostResponse>(blogPost));
-    }
-
-    [HttpGet("{tag}")]
+    [HttpGet]
     [AllowAnonymous]
     [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
-    public async Task<ActionResult<PagedBlogPostResponseDto>> GetPostByTag(string tag,
-        [FromQuery] PageParameters pageParameters)
+    public async Task<ActionResult<List<BlogQueryResponse>>> GetPostByAuthor(long id, PageParameters pageParameters, CancellationToken cancellationToken )
     {
-        var post = await _blogService.GetPostByTag(tag, pageParameters);
-        return Ok(new PagedBlogPostResponseDto(post, new PaginatedDto<List<BlogPostResponse>>.PageInformation
+        var request = new BlogQueryRequest()
         {
-            HasNext = post.HasNext,
-            CurrentPage = post.CurrentPage,
-            HasPrevious = post.HasPrevious,
-            PageSize = post.PageSize,
-            TotalCount = post.TotalCount,
-            TotalPages = post.TotalPages
-        }));
+            PageParameters = pageParameters,
+            AuthorId = id,
+            AllPost = false,
+            Tag = null,
+            PostId = null
+        };
+        var response = await _mediator.Send(request, cancellationToken);
+        return Ok(response);
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(SuccessResponseDto<BlogPost>), 200)]
+    public async Task<ActionResult<List<BlogQueryResponse>>> GetPostById(long id, CancellationToken cancellationToken )
+    {
+        var request = new BlogQueryRequest()
+        {
+            PageParameters = null,
+            AuthorId = null,
+            AllPost = false,
+            Tag = null,
+            PostId = id
+        };
+        var response = await _mediator.Send(request, cancellationToken);
+        return Ok(response);
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
+    public async Task<ActionResult<List<BlogQueryResponse>>> GetPostByTag(PageParameters pageParameters, string tag, CancellationToken cancellationToken )
+    {
+        var request = new BlogQueryRequest()
+        {
+            PageParameters = pageParameters,
+            AuthorId = null,
+            AllPost = false,
+            Tag = tag,
+            PostId = null
+        };
+        var response = await _mediator.Send(request, cancellationToken);
+        return Ok(response);
     }
 
     [HttpPost]
-    [Framework.Attributes.Authorize(UserRole.Author)]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
     public async Task<ActionResult<EmptySuccessResponseDto>> AddPost([FromForm] NewBlogPostDto newBlogPost)
     {
@@ -159,7 +154,7 @@ public class BlogController : AbstractController
 
 
     [HttpPut]
-    [Framework.Attributes.Authorize(UserRole.Author)]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
     public async Task<ActionResult<EmptySuccessResponseDto>> UpdatePost([FromForm] NewBlogPostDto updateBlogPost,
         long id)
@@ -171,7 +166,7 @@ public class BlogController : AbstractController
         var coverImagePath = await _blogService.UploadFile(updateBlogPost.CoverImage);
         var post = await _blogService.GetPost(id);
 
-        if (post == null) return BadRequest(new UserInputErrorDto("No post with Id"));
+        if (post == null) return BadRequest(new UserInputErrorDto("No post with AuthorId"));
 
         post.Body = updateBlogPost.Body;
         post.Summary = updateBlogPost.Summary;
@@ -185,8 +180,8 @@ public class BlogController : AbstractController
         return Ok(new EmptySuccessResponseDto("Post Updated Successfully!"));
     }
 
-    [HttpDelete("{id}")]
-    [Framework.Attributes.Authorize(UserRole.Author)]
+    [HttpDelete]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
     public async Task<ActionResult<EmptySuccessResponseDto>> DeletePost(long id)
     {
