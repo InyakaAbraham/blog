@@ -18,13 +18,9 @@ namespace Blog.Domain.Blog.Queries
         {
             try
             {
-                var query = _dataContext.BlogPosts
-                    .Include(x => x.Author)
-                    .Include(x => x.Category)
-                    .OrderByDescending(x => x.Created)
-                    .AsQueryable();
+                var query = _dataContext.BlogPosts.AsQueryable();
 
-                if ((bool)!request.AllPost)
+                if (!(request.AllPost ?? false))
                 {
                     if (request.PostId != null)
                     {
@@ -40,15 +36,20 @@ namespace Blog.Domain.Blog.Queries
                     }
                     else
                     {
-                        query = query.Take(3);
+                        query = query.OrderByDescending(x => x.Created).Take(3);
                     }
+                    query = query.Include(x => x.Author).Include(x => x.Category);
+                }
+                else
+                {
+                    query = query.Include(x => x.Author).Include(x => x.Category).OrderByDescending(x => x.Created);
                 }
 
                 var posts = await query
                     .Select(x => new BlogQueryResponse()
                     {
                         PostId = x.PostId,
-                        AuthorsName = x.Author.FirstName + " " + x.Author.LastName,
+                        AuthorsName = $"{x.Author.FirstName} {x.Author.LastName}",
                         CoverImagePath = x.CoverImagePath,
                         Title = x.Title,
                         Summary = x.Summary,
@@ -67,6 +68,7 @@ namespace Blog.Domain.Blog.Queries
                 Console.WriteLine($"An exception occurred: {ex.Message}");
                 throw;
             }
+
         }
     }
 }
