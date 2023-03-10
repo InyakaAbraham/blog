@@ -1,8 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
 using Blog.Api.Dtos;
+using Blog.Domain.Blog.Queries;
 using Blog.Features;
 using Blog.Models;
 using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,12 +17,14 @@ namespace Blog.Api.Controllers;
 [ProducesResponseType(typeof(UserInputErrorDto), 400)]
 public class BlogController : AbstractController
 {
+    private readonly IMediator _mediator;
     private readonly IBlogService _blogService;
     private readonly IUserService _userService;
     private readonly IValidator<NewBlogPostDto> _validator;
 
-    public BlogController(IBlogService blogService, IUserService userService, IValidator<NewBlogPostDto> validator)
+    public BlogController(IMediator mediator,IBlogService blogService, IUserService userService, IValidator<NewBlogPostDto> validator)
     {
+        _mediator = mediator;
         _blogService = blogService;
         _userService = userService;
         _validator = validator;
@@ -28,19 +32,30 @@ public class BlogController : AbstractController
 
     [HttpGet]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
-    public async Task<ActionResult<PagedBlogPostResponseDto>> GetAllPosts([FromQuery] PageParameters pageParameters)
+    [ProducesResponseType(typeof(BlogQueryResponse), 200)]
+    public async Task<ActionResult<BlogQueryResponse>> GetAllPosts([FromBody]BlogQueryRequest blogQueryRequest, CancellationToken cancellationToken )
     {
-        var post = await _blogService.GetAllPosts(pageParameters);
-        return Ok(new PagedBlogPostResponseDto(post, new PaginatedDto<List<BlogPostResponse>>.PageInformation
+        // var post = await _blogService.GetAllPosts(pageParameters);
+        // return Ok(new PagedBlogPostResponseDto(post, new PaginatedDto<List<BlogPostResponse>>.PageInformation
+        // {
+        //     TotalPages = post.TotalPages,
+        //     TotalCount = post.TotalCount,
+        //     CurrentPage = post.CurrentPage,
+        //     PageSize = post.PageSize,
+        //     HasNext = post.HasNext,
+        //     HasPrevious = post.HasPrevious
+        // }));
+
+        var request = new BlogQueryRequest()
         {
-            TotalPages = post.TotalPages,
-            TotalCount = post.TotalCount,
-            CurrentPage = post.CurrentPage,
-            PageSize = post.PageSize,
-            HasNext = post.HasNext,
-            HasPrevious = post.HasPrevious
-        }));
+          PageParameters = blogQueryRequest.PageParameters,
+          Id = blogQueryRequest.Id,
+          AllPost = blogQueryRequest.AllPost,
+          Tag = blogQueryRequest.Tag
+        };
+
+        var response = await _mediator.Send(request, cancellationToken);
+        return Ok(response);
     }
 
     [HttpGet]
