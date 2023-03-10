@@ -16,163 +16,56 @@ namespace Blog.Domain.Blog.Queries
 
         public async Task<List<BlogQueryResponse>> Handle(BlogQueryRequest request, CancellationToken cancellationToken)
         {
-            if (request.AllPost == true && string.IsNullOrEmpty(request.Tag) && request.AuthorId == null && request.PostId == null)
+            try
             {
-                try
+                var query = _dataContext.BlogPosts
+                    .Include(x => x.Author)
+                    .Include(x => x.Category)
+                    .OrderByDescending(x => x.Created)
+                    .AsQueryable();
+
+                if ((bool)!request.AllPost)
                 {
-                    var listPost = await (from bp in _dataContext.Set<BlogPost>()
-                        join ar in _dataContext.Set<Author>() on bp.AuthorId equals ar.AuthorId
-                        select new BlogQueryResponse
-                        {
-                            PostId = bp.PostId,
-                            AuthorsName = ar.FirstName + " " + ar.LastName,
-                            CoverImagePath = bp.CoverImagePath,
-                            Title = bp.Title,
-                            Summary = bp.Summary,
-                            Body = bp.Body,
-                            Tags = bp.Tags,
-                            Category = bp.Category,
-                            DateCreated = bp.Created
-                        }).OrderByDescending(x => x.DateCreated).ToListAsync(cancellationToken);
-
-                    return listPost;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"An exception occurred: {ex.Message}");
-                    return null;
-                }
-            }
-
-            if (request.AllPost == false && string.IsNullOrEmpty(request.Tag) && request.AuthorId == null && request.PostId == null)
-            {
-                try
-                {
-                    var listPost = await (from bp in _dataContext.Set<BlogPost>()
-                        join ar in _dataContext.Set<Author>() on bp.AuthorId equals ar.AuthorId
-                        select new BlogQueryResponse
-                        {
-                            PostId = bp.PostId,
-                            AuthorsName = ar.FirstName + " " + ar.LastName,
-                            CoverImagePath = bp.CoverImagePath,
-                            Title = bp.Title,
-                            Summary = bp.Summary,
-                            Body = bp.Body,
-                            Tags = bp.Tags,
-                            Category = bp.Category,
-                            DateCreated = bp.Created
-                        }).OrderByDescending(x => x.DateCreated).Take(3).ToListAsync(cancellationToken);
-
-                    return listPost;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"An exception occurred: {ex.Message}");
-                    return null;
-                }
-            }
-
-            if (request.AllPost == false && string.IsNullOrEmpty(request.Tag) && request.AuthorId != null && request.PostId == null)
-            {
-                try
-                {
-
-                    var post = await (from bp in _dataContext.BlogPosts
-                        join ar in _dataContext.Authors.Where(x => x.AuthorId == request.AuthorId) on
-                            bp.AuthorId equals ar.AuthorId
-                        select new BlogQueryResponse
-                        {
-                            PostId = bp.PostId,
-                            AuthorsName = ar.FirstName + " " + ar.LastName,
-                            CoverImagePath = bp.CoverImagePath,
-                            Title = bp.Title,
-                            Summary = bp.Summary,
-                            Body = bp.Body,
-                            Tags = bp.Tags,
-                            Category = bp.Category,
-                            DateCreated = bp.Created
-                        }).OrderByDescending(x => x.DateCreated).ToListAsync(cancellationToken: cancellationToken);
-
-                    return post;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"An exception occurred: {ex.Message}");
-                    return null;
-                }
-            }
-
-            if (request.AllPost == false && string.IsNullOrEmpty(request.Tag) && request.AuthorId == null && request.PostId != null)
-            {
-                try
-                {
-                    var blogPost = await _dataContext.BlogPosts
-                        .Where(x => x.PostId == request.PostId)
-                        .Include(x => x.Author)
-                        .Include(x => x.Category)
-                        .OrderBy(x => x.PostId)
-                        .FirstOrDefaultAsync(cancellationToken: cancellationToken);
-
-                    if (blogPost == null)
+                    if (request.PostId != null)
                     {
-                        return null;
+                        query = query.Where(x => x.PostId == request.PostId);
                     }
-
-                    var response = new BlogQueryResponse()
+                    else if (request.AuthorId != null)
                     {
-                        Body = blogPost.Body,
-                        Summary = blogPost.Summary,
-                        Category = blogPost.Category,
-                        Tags = blogPost.Tags,
-                        Title = blogPost.Title,
-                        CoverImagePath = blogPost.CoverImagePath,
-                        AuthorsName = blogPost.Author.FirstName +" "+ blogPost.Author.LastName,
-                        DateCreated = blogPost.Created,
-                        PostId = blogPost.PostId
-                    };
-
-                    return new List<BlogQueryResponse>()
+                        query = query.Where(x => x.AuthorId == request.AuthorId);
+                    }
+                    else if (!string.IsNullOrEmpty(request.Tag))
                     {
-                        response,
-                    };
+                        query = query.Where(x => x.Tags.Contains(request.Tag));
+                    }
+                    else
+                    {
+                        query = query.Take(3);
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"An exception occurred: {ex.Message}");
-                    return null;
-                }
-            }
 
-            if (request.AllPost == false && !string.IsNullOrEmpty(request.Tag) && request.AuthorId == null && request.PostId == null)
-            {
-                try
-                {
-                    var post = await (from bp in _dataContext.BlogPosts.Where(x => x.Tags.Contains(request.Tag))
-                        join ar in _dataContext.Authors on bp.AuthorId equals ar.AuthorId
-                        select new BlogQueryResponse()
-                        {
-                            PostId = bp.PostId,
-                            AuthorsName = ar.FirstName + " " + ar.LastName,
-                            CoverImagePath = bp.CoverImagePath,
-                            Title = bp.Title,
-                            Summary = bp.Summary,
-                            Body = bp.Body,
-                            Tags = bp.Tags,
-                            Category = bp.Category,
-                            DateCreated = bp.Created
-                        }).OrderByDescending(x => x.DateCreated).ToListAsync(cancellationToken: cancellationToken);
+                var posts = await query
+                    .Select(x => new BlogQueryResponse()
+                    {
+                        PostId = x.PostId,
+                        AuthorsName = x.Author.FirstName + " " + x.Author.LastName,
+                        CoverImagePath = x.CoverImagePath,
+                        Title = x.Title,
+                        Summary = x.Summary,
+                        Body = x.Body,
+                        Tags = x.Tags,
+                        Category = x.Category,
+                        DateCreated = x.Created
+                    })
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(false);
 
-                    return post;
-                }
-                catch(Exception ex)
-                {
-                    Console.WriteLine($"An exception occurred: {ex.Message}");
-                    return null;
-                }
+                return posts;
             }
-            else
+            catch (Exception ex)
             {
-                return null;
+                Console.WriteLine($"An exception occurred: {ex.Message}");
+                throw;
             }
         }
     }
