@@ -21,7 +21,7 @@ public class BlogCommandHandler : IRequestHandler<BlogCommand, BlogCommandRespon
     {
         try
         {
-            if (request.CreateNew==1 && request.PostId == null)
+            if (request.CreateNew == 1 && request.PostId == null)
             {
                 string coverImagePath = await UploadFile(request.CoverImage);
                 Author? author = await _dataContext.Authors.SingleOrDefaultAsync(x => x.AuthorId == GetContextUserId(), cancellationToken);
@@ -55,10 +55,11 @@ public class BlogCommandHandler : IRequestHandler<BlogCommand, BlogCommandRespon
                 await _dataContext.SaveChangesAsync(cancellationToken);
                 return new BlogCommandResponse(post);
             }
-            if (request.CreateNew==2 && request.PostId != null)
+
+            if (request.CreateNew == 2 && request.PostId != null)
             {
                 string coverImagePath = await UploadFile(request.CoverImage);
-                var post = await _dataContext.BlogPosts.SingleOrDefaultAsync(x => x.PostId == request.PostId, cancellationToken);
+                BlogPost? post = await _dataContext.BlogPosts.SingleOrDefaultAsync(x => x.PostId == request.PostId, cancellationToken);
 
                 if (post == null)
                 {
@@ -77,17 +78,17 @@ public class BlogCommandHandler : IRequestHandler<BlogCommand, BlogCommandRespon
                 return new BlogCommandResponse(post);
             }
 
-            if (request.CreateNew==3 && request.PostId != null)
+            if (request.CreateNew == 3 && request.PostId != null)
             {
-                var delPost = await _dataContext.BlogPosts.SingleOrDefaultAsync(x => x.PostId == request.PostId, cancellationToken: cancellationToken);
+                BlogPost? delPost = await _dataContext.BlogPosts.SingleOrDefaultAsync(x => x.PostId == request.PostId, cancellationToken);
 
                 if (delPost != null)
                 {
                     _dataContext.BlogPosts.Remove(delPost);
                     await _dataContext.SaveChangesAsync(cancellationToken);
+                    return new BlogCommandResponse(delPost);
                 }
             }
-
         }
 
         catch (Exception ex)

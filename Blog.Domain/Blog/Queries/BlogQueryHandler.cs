@@ -1,72 +1,73 @@
+using Blog.Models;
 using Blog.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace Blog.Domain.Blog.Queries
+namespace Blog.Domain.Blog.Queries;
+
+public class BlogQueryHandler : IRequestHandler<BlogQueryRequest, List<BlogQueryResponse>>
 {
-    public class BlogQueryHandler : IRequestHandler<BlogQueryRequest, List<BlogQueryResponse>>
+    private readonly DataContext _dataContext;
+
+    public BlogQueryHandler(DataContext dataContext)
     {
-        private readonly DataContext _dataContext;
+        _dataContext = dataContext;
+    }
 
-        public BlogQueryHandler(DataContext dataContext)
+    public async Task<List<BlogQueryResponse>> Handle(BlogQueryRequest request, CancellationToken cancellationToken)
+    {
+        try
         {
-            _dataContext = dataContext;
-        }
+            IQueryable<BlogPost> query = _dataContext.BlogPosts.AsQueryable();
 
-        public async Task<List<BlogQueryResponse>> Handle(BlogQueryRequest request, CancellationToken cancellationToken)
-        {
-            try
+            if (!(request.AllPost ?? false))
             {
-                var query = _dataContext.BlogPosts.AsQueryable();
-
-                if (!(request.AllPost ?? false))
+                if (request.PostId != null)
                 {
-                    if (request.PostId != null)
-                    {
-                        query = query.Where(x => x.PostId == request.PostId);
-                    }
-                    else if (request.AuthorId != null)
-                    {
-                        query = query.Where(x => x.AuthorId == request.AuthorId);
-                    }
-                    else if (!string.IsNullOrEmpty(request.Tag))
-                    {
-                        query = query.Where(x => x.Tags != null && x.Tags.Contains(request.Tag));
-                    }
-                    else
-                    {
-                        query = query.OrderByDescending(x => x.Created).Take(3);
-                    }
-                    query = query.Include(x => x.Author).Include(x => x.Category);
+                    query = query.Where(x => x.PostId == request.PostId);
+                }
+                else if (request.AuthorId != null)
+                {
+                    query = query.Where(x => x.AuthorId == request.AuthorId);
+                }
+                else if (!string.IsNullOrEmpty(request.Tag))
+                {
+                    query = query.Where(x => x.Tags != null && x.Tags.Contains(request.Tag));
                 }
                 else
                 {
-                    query = query.Include(x => x.Author).Include(x => x.Category).OrderByDescending(x => x.Created);
+                    query = query.OrderByDescending(x => x.Created).Take(3);
                 }
 
-                var posts = await query
-                    .Select(x => new BlogQueryResponse()
-                    {
-                        PostId = x.PostId,
-                        AuthorsName = $"{x.Author!.FirstName} {x.Author.LastName}",
-                        CoverImagePath = x.CoverImagePath,
-                        Title = x.Title,
-                        Summary = x.Summary,
-                        Body = x.Body,
-                        Tags = x.Tags,
-                        Category = x.Category,
-                        DateCreated = x.Created
-                    })
-                    .ToListAsync(cancellationToken)
-                    .ConfigureAwait(false);
-
-                return posts;
+                query = query.Include(x => x.Author).Include(x => x.Category);
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine($"An exception occurred: {ex.Message}");
-                throw;
+                query = query.Include(x => x.Author).Include(x => x.Category).OrderByDescending(x => x.Created);
             }
+
+            List<BlogQueryResponse> posts = await query
+                .Select(x => new BlogQueryResponse
+                {
+                    PostId = x.PostId,
+                    AuthorsName = $"{x.Author!.FirstName} {x.Author.LastName}",
+                    CoverImagePath = x.CoverImagePath,
+                    Title = x.Title,
+                    Summary = x.Summary,
+                    Body = x.Body,
+                    Tags = x.Tags,
+                    Category = x.Category,
+                    DateCreated = x.Created,
+                })
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            return posts;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An exception occurred: {ex.Message}");
+            throw;
         }
     }
 }
