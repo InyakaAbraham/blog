@@ -40,8 +40,7 @@ public class BlogController : AbstractController
           PostId = null
         };
 
-        var response = await _mediator.Send(request, cancellationToken);
-        return Ok(response);
+        return Ok(await _mediator.Send(request, cancellationToken));
     }
 
     [HttpGet]
@@ -57,8 +56,8 @@ public class BlogController : AbstractController
             Tag = null,
             PostId = null
         };
-        var response = await _mediator.Send(request, cancellationToken);
-        return Ok(response);
+
+        return Ok(await _mediator.Send(request, cancellationToken));
     }
 
     [HttpGet]
@@ -74,8 +73,8 @@ public class BlogController : AbstractController
             Tag = null,
             PostId = null
         };
-        var response = await _mediator.Send(request, cancellationToken);
-        return Ok(response);
+
+        return Ok(await _mediator.Send(request, cancellationToken));
     }
 
     [HttpGet]
@@ -91,8 +90,8 @@ public class BlogController : AbstractController
             Tag = null,
             PostId = id
         };
-        var response = await _mediator.Send(request, cancellationToken);
-        return Ok(response);
+
+        return Ok(await _mediator.Send(request, cancellationToken));
     }
 
     [HttpGet]
@@ -108,8 +107,8 @@ public class BlogController : AbstractController
             Tag = tag,
             PostId = null
         };
-        var response = await _mediator.Send(request, cancellationToken);
-        return Ok(response);
+
+        return Ok(await _mediator.Send(request, cancellationToken));
     }
 
     [HttpPost]
@@ -128,6 +127,7 @@ public class BlogController : AbstractController
             PostId = null,
             CreateNew = 1
         };
+
       return Ok( await _mediator.Send(request, cancellationToken));
     }
 
@@ -148,6 +148,7 @@ public class BlogController : AbstractController
             PostId = blogCommand.PostId,
             CreateNew = 2
         };
+
         return Ok( await _mediator.Send(request, cancellationToken));
     }
 
@@ -167,6 +168,7 @@ public class BlogController : AbstractController
             PostId = id,
             CreateNew = 3,
         };
+
         return Ok( await _mediator.Send(request, cancellationToken));
     }
 }
