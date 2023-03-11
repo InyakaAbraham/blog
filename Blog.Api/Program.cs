@@ -43,8 +43,6 @@ builder.Services.AddDbContextFactory<DataContext>(options =>
 {
     options.UseMySql(appSettings.MySqlDsn, ServerVersion.AutoDetect(appSettings.MySqlDsn));
 });
-builder.Services.AddScoped<IBlogService, BlogService>();
-builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 builder.Services.AddSwaggerGen(options =>
