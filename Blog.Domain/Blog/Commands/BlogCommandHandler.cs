@@ -19,58 +19,79 @@ public class BlogCommandHandler : IRequestHandler<BlogCommand, BlogCommandRespon
 
     public async Task<BlogCommandResponse> Handle(BlogCommand request, CancellationToken cancellationToken)
     {
-        if (!request.CreateNew) return null;
-
-        var coverImagePath = await UploadFile(request.CoverImage);
-        var author = await _dataContext.Authors.SingleOrDefaultAsync(x => x.AuthorId == GetContextUserId(), cancellationToken);
-        var categoryCheck = await _dataContext.Categories.SingleOrDefaultAsync(x => x.CategoryName == request.CategoryName, cancellationToken: cancellationToken);
-        Category category;
-        if (categoryCheck == null)
+        try
         {
-            category = new Category()
+            var coverImagePath = await UploadFile(request.CoverImage);
+
+            BlogPost post;
+
+            if (request.CreateNew)
             {
-                CategoryName = request.CategoryName
-            };
-            _dataContext.Categories.Add(category);
+                var author = await _dataContext.Authors.SingleOrDefaultAsync(x => x.AuthorId == GetContextUserId(), cancellationToken);
+                var category = await _dataContext.Categories.SingleOrDefaultAsync(x => x.CategoryName == request.CategoryName, cancellationToken);
+
+                if (category == null)
+                {
+                    category = new Category()
+                    {
+                        CategoryName = request.CategoryName
+                    };
+                    _dataContext.Categories.Add(category);
+                    await _dataContext.SaveChangesAsync(cancellationToken);
+                }
+
+                post = new BlogPost()
+                {
+                    Body = request.Body,
+                    CategoryName = category.CategoryName,
+                    Category = category,
+                    Summary = request.Summary,
+                    Tags = request.Tags,
+                    Title = request.Title,
+                    Author = author,
+                    Created = DateTime.Now,
+                    Updated = DateTime.Now,
+                    AuthorId = author.AuthorId,
+                    CoverImagePath = coverImagePath
+                };
+                _dataContext.BlogPosts.Add(post);
+            }
+            else
+            {
+                post = await _dataContext.BlogPosts.SingleOrDefaultAsync(x => x.PostId == request.PostId, cancellationToken: cancellationToken);
+                post.Body = request.Body;
+                post.Summary = request.Summary;
+                post.Tags = request.Tags;
+                post.Title = request.Title;
+                post.CoverImagePath = coverImagePath;
+                post.Updated = DateTime.UtcNow;
+
+                _dataContext.BlogPosts.Update(post);
+            }
+
             await _dataContext.SaveChangesAsync(cancellationToken);
-        }
-        else
-        {
-            category = categoryCheck;
-        }
-        var post = new BlogPost()
-        {
-            Body = request.Body,
-            CategoryName = category.CategoryName,
-            Category = category,
-            Summary = request.Summary,
-            Tags = request.Tags,
-            Title = request.Title,
-            Author = author,
-            Created = DateTime.Now,
-            Updated = DateTime.Now,
-            AuthorId = author.AuthorId,
-            CoverImagePath = coverImagePath
-        };
-        _dataContext.BlogPosts.Add(post);
 
-        await _dataContext.SaveChangesAsync(cancellationToken);
-
-        return new BlogCommandResponse
+            return new BlogCommandResponse
+            {
+                Body = post.Body,
+                CategoryName = post.CategoryName,
+                Category = post.Category,
+                Author = post.Author,
+                Created = post.Created,
+                Summary = post.Summary,
+                Tags = post.Tags,
+                Title = post.Title,
+                Updated = post.Updated,
+                AuthorId = post.AuthorId,
+                CoverImagePath = post.CoverImagePath,
+                PostId = post.PostId
+            };
+        }
+        catch (Exception ex)
         {
-            Body = post.Body,
-            CategoryName = post.CategoryName,
-            Category = post.Category,
-            Author = post.Author,
-            Created = post.Created,
-            Summary = post.Summary,
-            Tags = post.Tags,
-            Title = post.Title,
-            Updated = post.Updated,
-            AuthorId = post.AuthorId,
-            CoverImagePath = post.CoverImagePath,
-            PostId = post.PostId
-        };
+            Console.WriteLine($"An error occurred: {ex.Message}");
+            return null;
+        }
     }
 
     private async Task<string> UploadFile(IFormFile file)

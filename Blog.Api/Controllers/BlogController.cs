@@ -131,6 +131,7 @@ public class BlogController : AbstractController
             Title = blogCommand.Title,
             CoverImage = blogCommand.CoverImage,
             CategoryName = blogCommand.CategoryName,
+            PostId = null,
             CreateNew = true
         };
       return Ok( await _mediator.Send(request, cancellationToken));
@@ -140,28 +141,20 @@ public class BlogController : AbstractController
     [HttpPut]
     [AllowAnonymous]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
-    public async Task<ActionResult<EmptySuccessResponseDto>> UpdatePost([FromForm] NewBlogPostDto updateBlogPost,
-        long id)
+    public async Task<ActionResult<BlogCommandResponse>> UpdatePost(BlogCommand blogCommand, CancellationToken cancellationToken)
     {
-        var result = await _validator.ValidateAsync(updateBlogPost);
-
-        if (!result.IsValid) return BadRequest(new UserInputErrorDto(result));
-
-        var coverImagePath = await _blogService.UploadFile(updateBlogPost.CoverImage);
-        var post = await _blogService.GetPost(id);
-
-        if (post == null) return BadRequest(new UserInputErrorDto("No post with AuthorId"));
-
-        post.Body = updateBlogPost.Body;
-        post.Summary = updateBlogPost.Summary;
-        post.Tags = updateBlogPost.Tags;
-        post.Title = updateBlogPost.Title;
-        post.CoverImagePath = coverImagePath;
-        post.Updated = DateTime.UtcNow;
-
-        await _blogService.UpdatePost(post);
-
-        return Ok(new EmptySuccessResponseDto("Post Updated Successfully!"));
+        var request = new BlogCommand()
+        {
+            Body = blogCommand.Body,
+            Summary = blogCommand.Summary,
+            Tags = blogCommand.Tags,
+            Title = blogCommand.Title,
+            CoverImage = blogCommand.CoverImage,
+            CategoryName = blogCommand.CategoryName,
+            PostId = blogCommand.PostId,
+            CreateNew = true
+        };
+        return Ok( await _mediator.Send(request, cancellationToken));
     }
 
     [HttpDelete]
