@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Blog.Features\Blog.Features.csproj" />
       <ProjectReference Include="..\Blog.Models\Blog.Models.csproj" />
       <ProjectReference Include="..\Blog.Persistence\Blog.Persistence.csproj" />
     </ItemGroup>
@@ -15,6 +16,7 @@
       <PackageReference Include="MediatR" Version="11.0.0" />
       <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0-preview.1.23110.8" />
+      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.10.0" />
     </ItemGroup>
 
     <ItemGroup>
