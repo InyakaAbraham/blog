@@ -12,6 +12,6 @@ public class BlogCommand:IRequest<BlogCommandResponse>
      public string Body { get; set; }
      public string Tags { get; set; }
      public string CategoryName { get; set; }
-    [JsonIgnore] public bool CreateNew { get; set; }
+    [JsonIgnore] public int CreateNew { get; set; }
     [JsonIgnore] public long? PostId { get; set; }
 }

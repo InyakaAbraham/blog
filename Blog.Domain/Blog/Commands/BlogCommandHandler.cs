@@ -21,26 +21,23 @@ public class BlogCommandHandler : IRequestHandler<BlogCommand, BlogCommandRespon
     {
         try
         {
-            var coverImagePath = await UploadFile(request.CoverImage);
-
-            BlogPost post;
-
-            if (request.CreateNew)
+            if (request.CreateNew==1 && request.PostId == null)
             {
-                var author = await _dataContext.Authors.SingleOrDefaultAsync(x => x.AuthorId == GetContextUserId(), cancellationToken);
-                var category = await _dataContext.Categories.SingleOrDefaultAsync(x => x.CategoryName == request.CategoryName, cancellationToken);
+                string coverImagePath = await UploadFile(request.CoverImage);
+                Author? author = await _dataContext.Authors.SingleOrDefaultAsync(x => x.AuthorId == GetContextUserId(), cancellationToken);
+                Category? category = await _dataContext.Categories.SingleOrDefaultAsync(x => x.CategoryName == request.CategoryName, cancellationToken);
 
                 if (category == null)
                 {
-                    category = new Category()
+                    category = new Category
                     {
-                        CategoryName = request.CategoryName
+                        CategoryName = request.CategoryName,
                     };
                     _dataContext.Categories.Add(category);
                     await _dataContext.SaveChangesAsync(cancellationToken);
                 }
 
-                post = new BlogPost()
+                var post = new BlogPost
                 {
                     Body = request.Body,
                     CategoryName = category.CategoryName,
@@ -52,52 +49,60 @@ public class BlogCommandHandler : IRequestHandler<BlogCommand, BlogCommandRespon
                     Created = DateTime.Now,
                     Updated = DateTime.Now,
                     AuthorId = author.AuthorId,
-                    CoverImagePath = coverImagePath
+                    CoverImagePath = coverImagePath,
                 };
                 _dataContext.BlogPosts.Add(post);
+                await _dataContext.SaveChangesAsync(cancellationToken);
+                return new BlogCommandResponse(post);
             }
-            else
+            if (request.CreateNew==2 && request.PostId != null)
             {
-                post = await _dataContext.BlogPosts.SingleOrDefaultAsync(x => x.PostId == request.PostId, cancellationToken: cancellationToken);
+                string coverImagePath = await UploadFile(request.CoverImage);
+                var post = await _dataContext.BlogPosts.SingleOrDefaultAsync(x => x.PostId == request.PostId, cancellationToken);
+
+                if (post == null)
+                {
+                    return null;
+                }
+
+                post.CoverImagePath = coverImagePath;
                 post.Body = request.Body;
                 post.Summary = request.Summary;
                 post.Tags = request.Tags;
                 post.Title = request.Title;
-                post.CoverImagePath = coverImagePath;
                 post.Updated = DateTime.UtcNow;
 
                 _dataContext.BlogPosts.Update(post);
+                await _dataContext.SaveChangesAsync(cancellationToken);
+                return new BlogCommandResponse(post);
             }
 
-            await _dataContext.SaveChangesAsync(cancellationToken);
-
-            return new BlogCommandResponse
+            if (request.CreateNew==3 && request.PostId != null)
             {
-                Body = post.Body,
-                CategoryName = post.CategoryName,
-                Category = post.Category,
-                Author = post.Author,
-                Created = post.Created,
-                Summary = post.Summary,
-                Tags = post.Tags,
-                Title = post.Title,
-                Updated = post.Updated,
-                AuthorId = post.AuthorId,
-                CoverImagePath = post.CoverImagePath,
-                PostId = post.PostId
-            };
+                var delPost = await _dataContext.BlogPosts.SingleOrDefaultAsync(x => x.PostId == request.PostId, cancellationToken: cancellationToken);
+
+                if (delPost != null)
+                {
+                    _dataContext.BlogPosts.Remove(delPost);
+                    await _dataContext.SaveChangesAsync(cancellationToken);
+                }
+            }
+
         }
+
         catch (Exception ex)
         {
             Console.WriteLine($"An error occurred: {ex.Message}");
             return null;
         }
+
+        return null;
     }
 
     private async Task<string> UploadFile(IFormFile file)
     {
         var uniqueFileName = $"{Guid.NewGuid()}_{file.FileName}";
-        var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "WebRoot/images/", uniqueFileName);
+        string imagePath = Path.Combine(Directory.GetCurrentDirectory(), "WebRoot/images/", uniqueFileName);
 
         using (var stream = new FileStream(imagePath, FileMode.Create))
         {
@@ -110,6 +115,5 @@ public class BlogCommandHandler : IRequestHandler<BlogCommand, BlogCommandRespon
     private long GetContextUserId()
     {
         return long.Parse(_httpContextAccessor.HttpContext!.User.Claims.First(i => i.Type == "sub").Value);
-
     }
 }

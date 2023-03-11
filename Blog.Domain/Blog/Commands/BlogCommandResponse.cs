@@ -16,4 +16,23 @@ public class BlogCommandResponse
     public Author? Author { get; set; }
     public DateTime Created { get; set; }
     public DateTime Updated { get; set; }
+
+
+
+    public BlogCommandResponse(BlogPost post)
+    {
+        PostId = post.PostId;
+        CoverImagePath = post.CoverImagePath;
+        Title = post.Title;
+        Summary = post.Summary;
+        Body = post.Body;
+        Tags = post.Tags;
+        CategoryName = post.CategoryName;
+        Category = post.Category;
+        Author = post.Author;
+        AuthorId = post.AuthorId;
+        Created = post.Created;
+        Updated = post.Updated;
+    }
+
 }

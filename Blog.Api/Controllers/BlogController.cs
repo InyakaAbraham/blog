@@ -20,16 +20,10 @@ namespace Blog.Api.Controllers;
 public class BlogController : AbstractController
 {
     private readonly IMediator _mediator;
-    private readonly IBlogService _blogService;
-    private readonly IUserService _userService;
-    private readonly IValidator<NewBlogPostDto> _validator;
 
-    public BlogController(IMediator mediator,IBlogService blogService, IUserService userService, IValidator<NewBlogPostDto> validator)
+    public BlogController(IMediator mediator)
     {
         _mediator = mediator;
-        _blogService = blogService;
-        _userService = userService;
-        _validator = validator;
     }
 
     [HttpGet]
@@ -132,7 +126,7 @@ public class BlogController : AbstractController
             CoverImage = blogCommand.CoverImage,
             CategoryName = blogCommand.CategoryName,
             PostId = null,
-            CreateNew = true
+            CreateNew = 1
         };
       return Ok( await _mediator.Send(request, cancellationToken));
     }
@@ -152,7 +146,7 @@ public class BlogController : AbstractController
             CoverImage = blogCommand.CoverImage,
             CategoryName = blogCommand.CategoryName,
             PostId = blogCommand.PostId,
-            CreateNew = true
+            CreateNew = 2
         };
         return Ok( await _mediator.Send(request, cancellationToken));
     }
@@ -160,9 +154,19 @@ public class BlogController : AbstractController
     [HttpDelete]
     [AllowAnonymous]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
-    public async Task<ActionResult<EmptySuccessResponseDto>> DeletePost(long id)
+    public async Task<ActionResult<BlogCommandResponse>> DeletePost(long id, CancellationToken cancellationToken)
     {
-        await _blogService.DeletePost(id);
-        return Ok(new EmptySuccessResponseDto("Post Deleted!"));
+        var request = new BlogCommand
+        {
+            Body = null,
+            Summary = null,
+            Tags = null,
+            Title = null,
+            CoverImage = null,
+            CategoryName = null,
+            PostId = id,
+            CreateNew = 3,
+        };
+        return Ok( await _mediator.Send(request, cancellationToken));
     }
 }
