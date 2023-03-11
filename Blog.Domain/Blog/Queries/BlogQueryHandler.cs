@@ -1,4 +1,3 @@
-using Blog.Models;
 using Blog.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +31,7 @@ namespace Blog.Domain.Blog.Queries
                     }
                     else if (!string.IsNullOrEmpty(request.Tag))
                     {
-                        query = query.Where(x => x.Tags.Contains(request.Tag));
+                        query = query.Where(x => x.Tags != null && x.Tags.Contains(request.Tag));
                     }
                     else
                     {
@@ -49,7 +48,7 @@ namespace Blog.Domain.Blog.Queries
                     .Select(x => new BlogQueryResponse()
                     {
                         PostId = x.PostId,
-                        AuthorsName = $"{x.Author.FirstName} {x.Author.LastName}",
+                        AuthorsName = $"{x.Author!.FirstName} {x.Author.LastName}",
                         CoverImagePath = x.CoverImagePath,
                         Title = x.Title,
                         Summary = x.Summary,
@@ -68,7 +67,6 @@ namespace Blog.Domain.Blog.Queries
                 Console.WriteLine($"An exception occurred: {ex.Message}");
                 throw;
             }
-
         }
     }
 }

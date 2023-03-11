@@ -1,5 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Blog.Api.Dtos;
+using Blog.Api.Framework.Attributes;
+using Blog.Domain.Blog.Commands;
 using Blog.Domain.Blog.Queries;
 using Blog.Features;
 using Blog.Models;
@@ -83,7 +85,7 @@ public class BlogController : AbstractController
     }
 
     [HttpGet]
-    [AllowAnonymous]
+    [Framework.Attributes.Authorize(UserRole.Author)]
     [ProducesResponseType(typeof(SuccessResponseDto<BlogPost>), 200)]
     public async Task<ActionResult<List<BlogQueryResponse>>> GetPostById(long id, CancellationToken cancellationToken )
     {
@@ -119,37 +121,19 @@ public class BlogController : AbstractController
     [HttpPost]
     [AllowAnonymous]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
-    public async Task<ActionResult<EmptySuccessResponseDto>> AddPost([FromForm] NewBlogPostDto newBlogPost)
+    public async Task<ActionResult<BlogCommandResponse>> AddPost(BlogCommand blogCommand, CancellationToken cancellationToken)
     {
-        var result = await _validator.ValidateAsync(newBlogPost);
-
-        if (!result.IsValid) return BadRequest(new UserInputErrorDto(result));
-
-        var authorId = GetContextUserId();
-        var author = await _userService.GetAuthorById(authorId);
-        var coverImagePath = await _blogService.UploadFile(newBlogPost.CoverImage);
-        var category = await _blogService.AddCategory(new Category
+        var request = new BlogCommand()
         {
-            CategoryName = newBlogPost.CategoryName
-        });
-        var blogPost = await _blogService.AddPost(new BlogPost
-        {
-            CoverImagePath = coverImagePath,
-            Title = newBlogPost.Title,
-            Body = newBlogPost.Body,
-            Summary = newBlogPost.Summary,
-            Category = category,
-            CategoryName = category?.CategoryName,
-            AuthorId = authorId,
-            Tags = newBlogPost.Tags,
-            Author = author,
-            Updated = DateTime.UtcNow,
-            Created = DateTime.UtcNow
-        });
-
-        if (!blogPost) return BadRequest(new UserInputErrorDto("Enter post in valid format :("));
-
-        return Ok(new EmptySuccessResponseDto("Post Created Successfully!"));
+            Body = blogCommand.Body,
+            Summary = blogCommand.Summary,
+            Tags = blogCommand.Tags,
+            Title = blogCommand.Title,
+            CoverImage = blogCommand.CoverImage,
+            CategoryName = blogCommand.CategoryName,
+            CreateNew = true
+        };
+      return Ok( await _mediator.Send(request, cancellationToken));
     }
 
 

@@ -36,6 +36,7 @@ var appSettings = config.GetSection("AppSettings").Get<AppSettings>();
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 builder.Services.AddSingleton(appSettings);
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDbContextFactory<DataContext>(options =>
