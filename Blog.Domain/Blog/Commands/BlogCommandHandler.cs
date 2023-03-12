@@ -96,10 +96,8 @@ public class BlogCommandHandler : IRequestHandler<BlogCommand, BlogCommandRespon
 
         catch (Exception ex)
         {
-            Console.WriteLine($"An error occurred: {ex.Message}");
-            return null!;
+            throw new ArgumentNullException(nameof(request), $"An exception was thrown in blog command handler: {ex}");
         }
-
         return null!;
     }
 

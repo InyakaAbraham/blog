@@ -66,8 +66,7 @@ public class BlogQueryHandler : IRequestHandler<BlogQueryRequest, List<BlogQuery
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"An exception occurred: {ex.Message}");
-            throw;
+            throw new ArgumentNullException(nameof(request), $"An exception was thrown in blog query handler: {ex}");
         }
     }
 }
