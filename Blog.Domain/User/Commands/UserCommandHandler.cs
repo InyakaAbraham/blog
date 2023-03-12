@@ -73,10 +73,11 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
                             }
                         }
                     }
+                    throw new ArgumentNullException(nameof(request), $"An exception was thrown in register");
                 }
                 catch (Exception ex)
                 {
-                    throw new ArgumentNullException(nameof(request), "User with username/email already exists");
+                    throw new ArgumentNullException(nameof(request), $"An exception was thrown in register: {ex}");
                 }
 
             if (request.State == 2)
@@ -103,7 +104,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
                 }
                 catch (Exception ex)
                 {
-                    throw new ArgumentNullException(nameof(request), "Kindly login");
+                    throw new ArgumentNullException(nameof(request), $"An exception was thrown in update user: {ex}");
                 }
             }
 
@@ -127,8 +128,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"An exception occurred: {ex}");
-                    return null!;
+                    throw new ArgumentNullException(nameof(request), $"An exception was thrown in forgot password: {ex}");
                 }
             }
 
@@ -158,8 +158,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"An exception occurred: {ex.Message}");
-                    return null!;
+                    throw new ArgumentNullException(nameof(request), $"An exception was thrown in reset password: {ex}");
                 }
             }
 
@@ -196,8 +195,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"An exception occurred: {ex}");
-                    return null!;
+                    throw new ArgumentNullException(nameof(request), $"An exception was thrown in change password: {ex}");
                 }
             }
 
@@ -225,8 +223,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"An exception occurred: {ex}");
-                    return null!;
+                    throw new ArgumentNullException(nameof(request), $"An exception was thrown in change email: {ex}");
                 }
             }
 
@@ -258,8 +255,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"An exception occurred: {ex}");
-                    return null!;
+                    throw new ArgumentNullException(nameof(request), $"An exception was thrown in verify email: {ex}");
                 }
             }
 
@@ -285,8 +281,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"An exception occurred: {ex}");
-                    return null!;
+                    throw new ArgumentNullException(nameof(request), $"An exception was thrown in verify user: {ex}");
                 }
             }
 
@@ -310,10 +305,8 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"An exception occurred: {ex}");
-            return null!;
+            throw new ArgumentNullException(nameof(request), $"An exception was thrown in user command handler: {ex}");
         }
-
         return null!;
     }
 
@@ -344,8 +337,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"No author found: {ex}");
-            return null;
+            throw new ArgumentNullException(nameof(emailAddress), $"An exception was thrown in get author by email: {ex}");
         }
     }
 
@@ -357,8 +349,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"No author found: {ex}");
-            return null;
+            throw new ArgumentNullException(nameof(userName), $"An exception was thrown in get author by username: {ex}");
         }
     }
 
@@ -370,14 +361,13 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"No Author found: {ex}");
-            return null;
+            throw new ArgumentNullException(nameof(id), $"An exception was thrown in get author by id: {ex}");
         }
     }
 
     private long GetContextUserId()
     {
-        return long.Parse(_httpContextAccessor.HttpContext!.User.Claims.First(i => i.Type == "sub").Value);
+        return long.Parse(_httpContextAccessor.HttpContext!.User.Claims.FirstOrDefault(i => i.Type == "sub").Value);
     }
 
     private async Task<bool> VerifyPassword(string password, Author author)
@@ -388,8 +378,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Invalid username/password: {ex}");
-            return false;
+            throw new ArgumentNullException(nameof(password), $"An exception was thrown in verify password: {ex}");
         }
     }
 }
