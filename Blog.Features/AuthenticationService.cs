@@ -6,7 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Blog.Features;
 
-public class AuthenticationService:IAuthenticationService
+public class AuthenticationService : IAuthenticationService
 {
     private readonly AppSettings _appSettings;
 
@@ -14,6 +14,7 @@ public class AuthenticationService:IAuthenticationService
     {
         _appSettings = appSettings;
     }
+
     public Task<string> CreateJwtToken(Author author)
     {
         try
@@ -21,7 +22,10 @@ public class AuthenticationService:IAuthenticationService
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appSettings.JwtSecret));
             var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
             var claims = new List<Claim>
-                { new("sub", author.AuthorId.ToString()), new("role", UserRole.Default.ToString()) };
+            {
+                new("sub", author.AuthorId.ToString()),
+                new("role", UserRole.Default.ToString()),
+            };
 
             claims.AddRange(author.Roles.Select(role => new Claim("role", role!.Id.ToString())));
 
@@ -36,6 +40,7 @@ public class AuthenticationService:IAuthenticationService
         catch (Exception ex)
         {
             Console.WriteLine($"An exception occurred: {ex.Message}");
-            return null;
-        }    }
+            return null!;
+        }
+    }
 }

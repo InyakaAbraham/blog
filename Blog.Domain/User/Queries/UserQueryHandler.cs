@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Domain.User.Queries;
 
-public class UserQueryHandler: IRequestHandler<UserQueryRequest, UserQueryResponse>
+public class UserQueryHandler : IRequestHandler<UserQueryRequest, UserQueryResponse>
 {
     private readonly DataContext _dataContext;
 
@@ -17,14 +17,14 @@ public class UserQueryHandler: IRequestHandler<UserQueryRequest, UserQueryRespon
     {
         try
         {
-            return new UserQueryResponse( await _dataContext.Authors.Where(a => a.AuthorId == request.AuthorId)
+            return new UserQueryResponse(await _dataContext.Authors.Where(a => a.AuthorId == request.AuthorId)
                 .Include(a => a.BlogPosts)
-                .SingleOrDefaultAsync(cancellationToken: cancellationToken));
+                .SingleOrDefaultAsync(cancellationToken));
         }
         catch (Exception ex)
         {
             Console.WriteLine($"An exception occurred: {ex.Message}");
-            return null;
+            return null!;
         }
     }
 }

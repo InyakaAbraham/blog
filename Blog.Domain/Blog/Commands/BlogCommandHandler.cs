@@ -37,23 +37,26 @@ public class BlogCommandHandler : IRequestHandler<BlogCommand, BlogCommandRespon
                     await _dataContext.SaveChangesAsync(cancellationToken);
                 }
 
-                var post = new BlogPost
+                if (author != null)
                 {
-                    Body = request.Body,
-                    CategoryName = category.CategoryName,
-                    Category = category,
-                    Summary = request.Summary,
-                    Tags = request.Tags,
-                    Title = request.Title,
-                    Author = author,
-                    Created = DateTime.Now,
-                    Updated = DateTime.Now,
-                    AuthorId = author.AuthorId,
-                    CoverImagePath = coverImagePath,
-                };
-                _dataContext.BlogPosts.Add(post);
-                await _dataContext.SaveChangesAsync(cancellationToken);
-                return new BlogCommandResponse(post);
+                    var post = new BlogPost
+                    {
+                        Body = request.Body,
+                        CategoryName = category.CategoryName,
+                        Category = category,
+                        Summary = request.Summary,
+                        Tags = request.Tags,
+                        Title = request.Title,
+                        Author = author,
+                        Created = DateTime.Now,
+                        Updated = DateTime.Now,
+                        AuthorId = author.AuthorId,
+                        CoverImagePath = coverImagePath,
+                    };
+                    _dataContext.BlogPosts.Add(post);
+                    await _dataContext.SaveChangesAsync(cancellationToken);
+                    return new BlogCommandResponse(post);
+                }
             }
 
             if (request.CreateNew == 2 && request.PostId != null)
@@ -63,7 +66,7 @@ public class BlogCommandHandler : IRequestHandler<BlogCommand, BlogCommandRespon
 
                 if (post == null)
                 {
-                    return null;
+                    return null!;
                 }
 
                 post.CoverImagePath = coverImagePath;
@@ -94,10 +97,10 @@ public class BlogCommandHandler : IRequestHandler<BlogCommand, BlogCommandRespon
         catch (Exception ex)
         {
             Console.WriteLine($"An error occurred: {ex.Message}");
-            return null;
+            return null!;
         }
 
-        return null;
+        return null!;
     }
 
     private async Task<string> UploadFile(IFormFile file)

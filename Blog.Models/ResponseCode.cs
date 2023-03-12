@@ -6,5 +6,5 @@ public enum ResponseCode
     ServerError = 1,
     UserInputError = 2,
     UserNotAuthenticated = 3,
-    UserNotAuthorized = 4
+    UserNotAuthorized = 4,
 }

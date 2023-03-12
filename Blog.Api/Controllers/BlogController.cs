@@ -1,11 +1,7 @@
-using System.Diagnostics.CodeAnalysis;
 using Blog.Api.Dtos;
-using Blog.Api.Framework.Attributes;
 using Blog.Domain.Blog.Commands;
 using Blog.Domain.Blog.Queries;
-using Blog.Features;
 using Blog.Models;
-using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,15 +25,15 @@ public class BlogController : AbstractController
     [HttpGet]
     [AllowAnonymous]
     [ProducesResponseType(typeof(BlogQueryResponse), 200)]
-    public async Task<ActionResult<List<BlogQueryResponse>>> GetAllPosts(CancellationToken cancellationToken )
+    public async Task<ActionResult<List<BlogQueryResponse>>> GetAllPosts(CancellationToken cancellationToken)
     {
-        var request = new BlogQueryRequest()
+        var request = new BlogQueryRequest
         {
-          PageParameters =null,
-          AuthorId =null,
-          AllPost = true,
-          Tag = null,
-          PostId = null
+            PageParameters = null,
+            AuthorId = null,
+            AllPost = true,
+            Tag = null,
+            PostId = null,
         };
 
         return Ok(await _mediator.Send(request, cancellationToken));
@@ -46,15 +42,15 @@ public class BlogController : AbstractController
     [HttpGet]
     [AllowAnonymous]
     [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
-    public async Task<ActionResult<List<BlogQueryResponse>>> GetRecentPost(CancellationToken cancellationToken )
+    public async Task<ActionResult<List<BlogQueryResponse>>> GetRecentPost(CancellationToken cancellationToken)
     {
-        var request = new BlogQueryRequest()
+        var request = new BlogQueryRequest
         {
-            PageParameters =null,
-            AuthorId =null,
+            PageParameters = null,
+            AuthorId = null,
             AllPost = false,
             Tag = null,
-            PostId = null
+            PostId = null,
         };
 
         return Ok(await _mediator.Send(request, cancellationToken));
@@ -63,15 +59,15 @@ public class BlogController : AbstractController
     [HttpGet]
     [AllowAnonymous]
     [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
-    public async Task<ActionResult<List<BlogQueryResponse>>> GetPostByAuthor(long id, PageParameters pageParameters, CancellationToken cancellationToken )
+    public async Task<ActionResult<List<BlogQueryResponse>>> GetPostByAuthor(long id, PageParameters pageParameters, CancellationToken cancellationToken)
     {
-        var request = new BlogQueryRequest()
+        var request = new BlogQueryRequest
         {
             PageParameters = pageParameters,
             AuthorId = id,
             AllPost = false,
             Tag = null,
-            PostId = null
+            PostId = null,
         };
 
         return Ok(await _mediator.Send(request, cancellationToken));
@@ -80,15 +76,15 @@ public class BlogController : AbstractController
     [HttpGet]
     [Framework.Attributes.Authorize(UserRole.Author)]
     [ProducesResponseType(typeof(SuccessResponseDto<BlogPost>), 200)]
-    public async Task<ActionResult<List<BlogQueryResponse>>> GetPostById(long id, CancellationToken cancellationToken )
+    public async Task<ActionResult<List<BlogQueryResponse>>> GetPostById(long id, CancellationToken cancellationToken)
     {
-        var request = new BlogQueryRequest()
+        var request = new BlogQueryRequest
         {
             PageParameters = null,
             AuthorId = null,
             AllPost = false,
             Tag = null,
-            PostId = id
+            PostId = id,
         };
 
         return Ok(await _mediator.Send(request, cancellationToken));
@@ -97,15 +93,15 @@ public class BlogController : AbstractController
     [HttpGet]
     [AllowAnonymous]
     [ProducesResponseType(typeof(PagedBlogPostResponseDto), 200)]
-    public async Task<ActionResult<List<BlogQueryResponse>>> GetPostByTag(PageParameters pageParameters, string tag, CancellationToken cancellationToken )
+    public async Task<ActionResult<List<BlogQueryResponse>>> GetPostByTag(PageParameters pageParameters, string tag, CancellationToken cancellationToken)
     {
-        var request = new BlogQueryRequest()
+        var request = new BlogQueryRequest
         {
             PageParameters = pageParameters,
             AuthorId = null,
             AllPost = false,
             Tag = tag,
-            PostId = null
+            PostId = null,
         };
 
         return Ok(await _mediator.Send(request, cancellationToken));
@@ -116,7 +112,7 @@ public class BlogController : AbstractController
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
     public async Task<ActionResult<BlogCommandResponse>> AddPost(BlogCommand blogCommand, CancellationToken cancellationToken)
     {
-        var request = new BlogCommand()
+        var request = new BlogCommand
         {
             Body = blogCommand.Body,
             Summary = blogCommand.Summary,
@@ -125,10 +121,10 @@ public class BlogController : AbstractController
             CoverImage = blogCommand.CoverImage,
             CategoryName = blogCommand.CategoryName,
             PostId = null,
-            CreateNew = 1
+            CreateNew = 1,
         };
 
-      return Ok( await _mediator.Send(request, cancellationToken));
+        return Ok(await _mediator.Send(request, cancellationToken));
     }
 
 
@@ -137,7 +133,7 @@ public class BlogController : AbstractController
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
     public async Task<ActionResult<BlogCommandResponse>> UpdatePost(BlogCommand blogCommand, CancellationToken cancellationToken)
     {
-        var request = new BlogCommand()
+        var request = new BlogCommand
         {
             Body = blogCommand.Body,
             Summary = blogCommand.Summary,
@@ -146,10 +142,10 @@ public class BlogController : AbstractController
             CoverImage = blogCommand.CoverImage,
             CategoryName = blogCommand.CategoryName,
             PostId = blogCommand.PostId,
-            CreateNew = 2
+            CreateNew = 2,
         };
 
-        return Ok( await _mediator.Send(request, cancellationToken));
+        return Ok(await _mediator.Send(request, cancellationToken));
     }
 
     [HttpDelete]
@@ -169,6 +165,6 @@ public class BlogController : AbstractController
             CreateNew = 3,
         };
 
-        return Ok( await _mediator.Send(request, cancellationToken));
+        return Ok(await _mediator.Send(request, cancellationToken));
     }
 }

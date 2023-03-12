@@ -21,7 +21,10 @@ public class EmailService : IEmailService
         email.From.Add(MailboxAddress.Parse(_appSettings.EmailFrom));
         email.To.Add(MailboxAddress.Parse(to));
         email.Subject = subject;
-        email.Body = new TextPart(TextFormat.Plain) { Text = text };
+        email.Body = new TextPart(TextFormat.Plain)
+        {
+            Text = text,
+        };
 
 
         using var smtp = new MailKitSmtpClient();

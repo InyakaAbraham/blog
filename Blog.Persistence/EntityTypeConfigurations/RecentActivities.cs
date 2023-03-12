@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Blog.Persistence.EntityTypeConfigurations;
 
-public class RecentActivities:IEntityTypeConfiguration<Models.RecentActivities>
+public class RecentActivities : IEntityTypeConfiguration<Models.RecentActivities>
 {
     public void Configure(EntityTypeBuilder<Models.RecentActivities> builder)
     {

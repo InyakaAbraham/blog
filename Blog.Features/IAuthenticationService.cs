@@ -4,5 +4,5 @@ namespace Blog.Features;
 
 public interface IAuthenticationService
 {
-     public Task<string> CreateJwtToken(Author author);
+    public Task<string> CreateJwtToken(Author author);
 }

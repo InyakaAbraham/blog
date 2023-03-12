@@ -1,4 +1,3 @@
-
 using Blog.Features;
 using Blog.Models;
 using Blog.Persistence;
@@ -10,16 +9,16 @@ using Role = Blog.Models.Role;
 
 namespace Blog.Domain.User.Commands;
 
-public class UserCommandHandler: IRequestHandler<UserCommand, UserCommandResponse>
+public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandResponse>
 {
+    private static readonly Random GenerateRandomToken = new();
+    private readonly IDatabase _database;
     private readonly DataContext _dataContext;
     private readonly IEmailService _emailService;
-    private readonly IDatabase _database;
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private static readonly Random GenerateRandomToken = new();
 
 
-    public UserCommandHandler(DataContext dataContext,  IEmailService emailService, IConnectionMultiplexer redis, IHttpContextAccessor httpContextAccessor)
+    public UserCommandHandler(DataContext dataContext, IEmailService emailService, IConnectionMultiplexer redis, IHttpContextAccessor httpContextAccessor)
     {
         _dataContext = dataContext;
         _emailService = emailService;
@@ -33,121 +32,216 @@ public class UserCommandHandler: IRequestHandler<UserCommand, UserCommandRespons
         {
             if (request.State == 1)
             {
-                var token = CreateRandomToken();
+                string token = CreateRandomToken();
 
                 await _database.StringSetAsync($"email_verification_otp:{request.EmailAddress}",
                     token, TimeSpan.FromDays(365));
 
                 _emailService.Send("to_address@example.com", "Verification Token", $"Your OTP is {token} valid for 20Minutes.");
-                var authorByEmail = await GetAuthorByEmailAddress(request.EmailAddress);
-                var authorByUsername = await GetAuthorByUsername(request.Username);
-
-                if (authorByEmail == null && authorByUsername == null)
+                if (request.EmailAddress != null)
                 {
-                    var author = new Author
+                    Author? authorByEmail = await GetAuthorByEmailAddress(request.EmailAddress);
+                    if (request.Username != null)
                     {
-                        EmailAddress = request.EmailAddress,
-                        Roles = new List<Role?>
-                        {
-                            await _dataContext.Roles.SingleOrDefaultAsync(x => x.Id == UserRole.Author, cancellationToken: cancellationToken)
-                        },
-                        Description = request.Description,
-                        Username = request.Username,
-                        CreatedAt = DateTime.UtcNow,
-                        FirstName = request.FirstName,
-                        LastName = request.LastName,
-                        PasswordHash = await CreatePasswordHash(request.Password),
-                        LastLogin = DateTime.Now
-                    };
+                        Author? authorByUsername = await GetAuthorByUsername(request.Username);
 
-                    _dataContext.Authors.Add(author);
+                        if (authorByEmail == null && authorByUsername == null)
+                        {
+                            if (request.Password != null)
+                            {
+                                var author = new Author
+                                {
+                                    EmailAddress = request.EmailAddress,
+                                    Roles = new List<Role?>
+                                    {
+                                        await _dataContext.Roles.SingleOrDefaultAsync(x => x.Id == UserRole.Author, cancellationToken),
+                                    },
+                                    Description = request.Description,
+                                    Username = request.Username,
+                                    CreatedAt = DateTime.UtcNow,
+                                    FirstName = request.FirstName,
+                                    LastName = request.LastName,
+                                    PasswordHash = await CreatePasswordHash(request.Password),
+                                    LastLogin = DateTime.Now,
+                                };
+
+                                _dataContext.Authors.Add(author);
+                                await _dataContext.SaveChangesAsync(cancellationToken);
+                                return new UserCommandResponse(author);
+                            }
+                        }
+                    }
+                }
+
+                throw new ArgumentNullException(nameof(request), "User with username/email already exists");
+            }
+
+            if (request.State == 2)
+            {
+                Author? author = await GetAuthorById(GetContextUserId());
+                if (request.Username != null)
+                {
+                    Author? authorBuUsername = await GetAuthorByUsername(request.Username);
+
+                    if (author == null) throw new ArgumentNullException(nameof(request), "Author does not exist");
+                    if (authorBuUsername != null && request.Username != author.Username) throw new ArgumentNullException(nameof(request), "Username already exist");
+                }
+
+                if (author != null)
+                {
+                    author.Username = request.Username;
+                    author.FirstName = request.FirstName;
+                    author.LastName = request.LastName;
+                    author.Description = request.Description;
+
+                    _dataContext.Authors.Update(author);
                     await _dataContext.SaveChangesAsync(cancellationToken);
                     return new UserCommandResponse(author);
                 }
-
-                throw new ArgumentNullException("usernameOrEmail", "User with username/email already exists");
             }
 
-            if (request.State==2)
-            {
-                var author = await GetAuthorById(GetContextUserId());
-                var authorBuUsername = await GetAuthorByUsername(request.Username);
-
-                if (author == null) throw new ArgumentNullException("author", "Author does not exist");
-                if (authorBuUsername != null && request.Username != author.Username) throw new ArgumentNullException("Username", "Username already exist");
-
-                author.Username = request.Username;
-                author.FirstName = request.FirstName;
-                author.LastName = request.LastName;
-                author.Description = request.Description;
-
-                _dataContext.Authors.Update(author);
-                await _dataContext.SaveChangesAsync(cancellationToken);
-                return new UserCommandResponse(author);
-            }
-
-            if (request.State==3)
+            if (request.State == 3)
             {
                 try
                 {
-                    var author = await GetAuthorByEmailAddress(request.EmailAddress);
-                    if (author == null) throw new ArgumentNullException("author", "Author does not exist");
-
-                    var token = CreateRandomToken();
-
-                    await _database.StringSetAsync($"email_reset_otp:{request.EmailAddress}",
-                        token, TimeSpan.FromMinutes(20));
-                    _emailService.Send("to_address@example.com", "Reset Token", $" Your OTP is {token} valid for 20Minutes.");
-
-                    return new UserCommandResponse(author);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"An exception occurred: {ex.Message}");
-                    return null;
-                }
-            }
-
-            if (request.State==4)
-            {
-                try
-                {
-                    var user = await GetAuthorByEmailAddress(request.EmailAddress);
-                    if (user == null) throw new ArgumentNullException("author", "Author does not exist");
-
-                    var validateToken = await _database.StringGetAsync($"email_reset_otp:{request.EmailAddress}");
-                    if (validateToken != request.Token) throw new ArgumentNullException("token", "invalid token");
-
-                    var passwordHash = await CreatePasswordHash(request.Password);
-                    user.PasswordHash = passwordHash;
-
-                    _dataContext.Authors.Update(user);
-                     await _dataContext.SaveChangesAsync(cancellationToken);
-
-                    return new UserCommandResponse(user);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"An exception occurred: {ex.Message}");
-                    return null;
-                }
-            }
-
-            if (request.State==5)
-            {
-                try
-                {
-                    var author = await GetAuthorByEmailAddress(request.EmailAddress);
-                    var currentAuthor = await GetAuthorById(GetContextUserId());
-                    var validatePassword = await VerifyPassword(request.Password, author!);
-
-                    if (!validatePassword) throw new ArgumentNullException("password", "Invalid username/password");
-
-                    if (author==currentAuthor)
+                    if (request.EmailAddress != null)
                     {
-                        var passwordHash = await CreatePasswordHash(request.NewPassword);
+                        Author? author = await GetAuthorByEmailAddress(request.EmailAddress);
+                        if (author == null) throw new ArgumentNullException(nameof(request), "Author does not exist");
 
-                        author!.PasswordHash = passwordHash;
+                        string token = CreateRandomToken();
+
+                        await _database.StringSetAsync($"email_reset_otp:{request.EmailAddress}",
+                            token, TimeSpan.FromMinutes(20));
+                        _emailService.Send("to_address@example.com", "Reset Token", $" Your OTP is {token} valid for 20Minutes.");
+
+                        return new UserCommandResponse(author);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"An exception occurred: {ex.Message}");
+                    return null!;
+                }
+            }
+
+            if (request.State == 4)
+            {
+                try
+                {
+                    if (request.EmailAddress != null)
+                    {
+                        Author? user = await GetAuthorByEmailAddress(request.EmailAddress);
+                        if (user == null) throw new ArgumentNullException(nameof(request), "Author does not exist");
+
+                        RedisValue validateToken = await _database.StringGetAsync($"email_reset_otp:{request.EmailAddress}");
+                        if (validateToken != request.Token) throw new ArgumentNullException(nameof(request), "invalid token");
+
+                        if (request.Password != null)
+                        {
+                            string? passwordHash = await CreatePasswordHash(request.Password);
+                            user.PasswordHash = passwordHash;
+                        }
+
+                        _dataContext.Authors.Update(user);
+                        await _dataContext.SaveChangesAsync(cancellationToken);
+
+                        return new UserCommandResponse(user);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"An exception occurred: {ex.Message}");
+                    return null!;
+                }
+            }
+
+            if (request.State == 5)
+            {
+                try
+                {
+                    if (request.EmailAddress != null)
+                    {
+                        Author? author = await GetAuthorByEmailAddress(request.EmailAddress);
+                        Author? currentAuthor = await GetAuthorById(GetContextUserId());
+                        bool validatePassword = request.Password != null && await VerifyPassword(request.Password, author!);
+
+                        if (!validatePassword) throw new ArgumentNullException(nameof(request), "Invalid username/password");
+
+                        if (author == currentAuthor)
+                        {
+                            if (request.NewPassword != null)
+                            {
+                                string? passwordHash = await CreatePasswordHash(request.NewPassword);
+
+                                author!.PasswordHash = passwordHash;
+                            }
+
+                            if (author != null)
+                            {
+                                _dataContext.Authors.Update(author);
+                                await _dataContext.SaveChangesAsync(cancellationToken);
+
+                                return new UserCommandResponse(author);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"An exception occurred: {ex.Message}");
+                    return null!;
+                }
+            }
+
+            if (request.State == 6)
+            {
+                try
+                {
+                    if (request.EmailAddress != null)
+                    {
+                        Author? author = await GetAuthorByEmailAddress(request.EmailAddress);
+                        if (author == null) throw new ArgumentNullException(nameof(request), "Author does not exist");
+
+                        bool validateAuthor = request.Password != null && await VerifyPassword(request.Password, author);
+                        if (!validateAuthor) throw new ArgumentNullException(nameof(request), "Invalid username/password");
+
+                        string token = CreateRandomToken();
+
+                        await _database.StringSetAsync($"email_change_otp:{author.EmailAddress}",
+                            token, TimeSpan.FromMinutes(20));
+
+                        _emailService.Send("to_address@example.com", "Verification Token", $"Your OTP is {token} valid for 20Minutes.");
+
+                        return new UserCommandResponse(author);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"An exception occurred: {ex.Message}");
+                    return null!;
+                }
+            }
+
+            if (request.State == 7)
+            {
+                try
+                {
+                    if (request.EmailAddress != null)
+                    {
+                        Author? newEmailAddressCheck = await GetAuthorByEmailAddress(request.EmailAddress);
+                        if (newEmailAddressCheck != null) throw new ArgumentNullException(nameof(request), "Author does not exist");
+                    }
+
+                    RedisValue validateToken = await _database.StringGetAsync($"email_change_otp:{request.OldEmailAddress}");
+                    if (validateToken != request.Token) throw new ArgumentNullException(nameof(request), "Invalid token");
+
+                    if (request.EmailAddress != null)
+                    {
+                        Author? author = await GetAuthorByEmailAddress(request.EmailAddress);
+                        if (author == null) throw new ArgumentNullException(nameof(request), "Author does not exist");
+
+                        author.EmailAddress = request.EmailAddress;
 
                         _dataContext.Authors.Update(author);
                         await _dataContext.SaveChangesAsync(cancellationToken);
@@ -158,117 +252,71 @@ public class UserCommandHandler: IRequestHandler<UserCommand, UserCommandRespons
                 catch (Exception ex)
                 {
                     Console.WriteLine($"An exception occurred: {ex.Message}");
-                    return null;
+                    return null!;
                 }
             }
 
-            if (request.State==6)
+            if (request.State == 8)
             {
                 try
                 {
-                    var author = await GetAuthorByEmailAddress(request.EmailAddress);
-                    if (author == null) throw new ArgumentNullException("author", "Author does not exist");
+                    RedisValue validateToken = await _database.StringGetAsync($"email_verification_otp:{request.EmailAddress}");
+                    if (validateToken != request.Token) throw new ArgumentNullException(nameof(request), "Invalid token");
 
-                    var validateAuthor = await VerifyPassword(request.Password, author);
-                    if (!validateAuthor) throw new ArgumentNullException("author", "Invalid username/password");
+                    if (request.EmailAddress != null)
+                    {
+                        Author? author = await GetAuthorByEmailAddress(request.EmailAddress);
+                        if (author == null) throw new ArgumentNullException(nameof(request), "Author does not exist");
 
-                    var token = CreateRandomToken();
+                        author.VerifiedAt = DateTime.UtcNow;
 
-                    await _database.StringSetAsync($"email_change_otp:{author.EmailAddress}",
-                        token, TimeSpan.FromMinutes(20));
+                        _dataContext.Authors.Update(author);
+                        await _dataContext.SaveChangesAsync(cancellationToken);
 
-                    _emailService.Send("to_address@example.com", "Verification Token", $"Your OTP is {token} valid for 20Minutes.");
-
-                    return new UserCommandResponse(author);
+                        return new UserCommandResponse(author);
+                    }
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"An exception occurred: {ex.Message}");
-                    return null;
+                    return null!;
                 }
             }
 
-            if (request.State==7)
+            if (request.State == 9)
             {
-                try
+                if (request.EmailAddress != null)
                 {
-                    var newEmailAddressCheck = await GetAuthorByEmailAddress(request.EmailAddress);
-                    if (newEmailAddressCheck != null) throw new ArgumentNullException("author", "Author does not exist");
+                    Author? author = await GetAuthorByEmailAddress(request.EmailAddress);
+                    if (request.Password != null && (author == null || !await VerifyPassword(request.Password, author)))
+                        throw new ArgumentNullException(nameof(request), "Invalid email/password");
 
-                    var validateToken = await _database.StringGetAsync($"email_change_otp:{request.OldEmailAddress}");
-                    if (validateToken != request.Token) throw new ArgumentNullException("author", "Invalid token");
+                    if (author?.VerifiedAt == null) throw new ArgumentNullException(nameof(request), "User not verified");
 
-                    var author = await GetAuthorByEmailAddress(request.EmailAddress);
-                    if (author == null) throw new ArgumentNullException("author", "Author does not exist");
-
-                    author.EmailAddress = request.EmailAddress;
-
-                    _dataContext.Authors.Update(author);
+                    author.LastLogin = DateTime.UtcNow;
+                    _dataContext.Update(author);
                     await _dataContext.SaveChangesAsync(cancellationToken);
 
                     return new UserCommandResponse(author);
                 }
-                catch(Exception ex)
-                {
-                    Console.WriteLine($"An exception occurred: {ex.Message}");
-                    return null;
-                }
-            }
-
-            if (request.State==8)
-            {
-                try
-                {
-                    var validateToken = await _database.StringGetAsync($"email_verification_otp:{request.EmailAddress}");
-                    if (validateToken != request.Token) throw new ArgumentNullException("author", "Invalid token");
-
-                    var author = await GetAuthorByEmailAddress(request.EmailAddress);
-                    if (author == null) throw new ArgumentNullException("author", "Author does not exist");
-
-                    author.VerifiedAt = DateTime.UtcNow;
-
-                    _dataContext.Authors.Update(author);
-                    await _dataContext.SaveChangesAsync(cancellationToken);
-
-                    return new UserCommandResponse(author);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"An exception occurred: {ex.Message}");
-                    return null;
-                }
-            }
-
-            if (request.State==9)
-            {
-                var author = await GetAuthorByEmailAddress(request.EmailAddress);
-                if (author == null || !await VerifyPassword(request.Password, author))
-                    throw new ArgumentNullException("author", "Invalid email/password");
-
-                if (author.VerifiedAt == null) throw new ArgumentNullException("author", "User not verified");
-
-                author.LastLogin = DateTime.UtcNow;
-                 _dataContext.Update(author);
-                 await _dataContext.SaveChangesAsync(cancellationToken);
-
-              return new UserCommandResponse(author);
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"An exception occurred: {ex.Message}");
-            return null;
+            return null!;
         }
-        return null;
+
+        return null!;
     }
 
     private string CreateRandomToken()
     {
         int CreateRandomNumber(int min, int max)
         {
-            lock (GenerateRandomToken)
+            lock (UserCommandHandler.GenerateRandomToken)
             {
-                return GenerateRandomToken.Next(min, max);
+                return UserCommandHandler.GenerateRandomToken.Next(min, max);
             }
         }
 

@@ -13,9 +13,18 @@ public class Role : IEntityTypeConfiguration<Models.Role>
             .WithMany(y => y.Roles);
         builder.HasData(new object[]
         {
-            new Models.Role { Id = UserRole.Author },
-            new Models.Role { Id = UserRole.Moderator },
-            new Models.Role { Id = UserRole.Administrator }
+            new Models.Role
+            {
+                Id = UserRole.Author,
+            },
+            new Models.Role
+            {
+                Id = UserRole.Moderator,
+            },
+            new Models.Role
+            {
+                Id = UserRole.Administrator,
+            },
         });
     }
 }

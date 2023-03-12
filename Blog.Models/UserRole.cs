@@ -5,5 +5,5 @@ public enum UserRole
     Default,
     Author,
     Moderator,
-    Administrator
+    Administrator,
 }

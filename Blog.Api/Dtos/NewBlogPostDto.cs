@@ -5,7 +5,7 @@ namespace Blog.Api.Dtos;
 
 public class NewBlogPostDto
 {
-    [JsonIgnore]public IFormFile CoverImage { get; set; }
+    [JsonIgnore] public IFormFile CoverImage { get; set; }
     [Required] public string Title { get; set; }
     [Required] public string Summary { get; set; }
     [Required] public string Body { get; set; }

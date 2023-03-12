@@ -15,8 +15,8 @@ namespace Blog.Api.Controllers;
 [ProducesResponseType(typeof(UserInputErrorDto), 400)]
 public class AuthorController : AbstractController
 {
-    private readonly IMediator _mediator;
     private readonly IAuthenticationService _authenticationService;
+    private readonly IMediator _mediator;
 
     public AuthorController(
         IMediator mediator, IAuthenticationService authenticationService)
@@ -162,16 +162,16 @@ public class AuthorController : AbstractController
             State = 9,
         };
 
-        var response = await _mediator.Send(request, cancellationToken);
+        UserCommandResponse response = await _mediator.Send(request, cancellationToken);
 
         return Ok(new JwtDto
         (new JwtDto.Credentials
         {
-          AccessToken = await _authenticationService.CreateJwtToken(new Author()
-          {
-              AuthorId = response.AuthorId,
-              Roles = response.Roles
-          }),
+            AccessToken = await _authenticationService.CreateJwtToken(new Author
+            {
+                AuthorId = response.AuthorId,
+                Roles = response.Roles,
+            }),
         }));
     }
 

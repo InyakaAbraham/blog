@@ -15,8 +15,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
 
-
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.AddMediatR(typeof(BlogQueryHandler).Assembly);
 // var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
 builder.Services.AddCors(options =>
@@ -27,7 +26,7 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()
             .AllowAnyHeader());
 });
-var config = new ConfigurationBuilder()
+IConfigurationRoot? config = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json", false, true)
     .AddJsonFile("appsettings.local.json", false, true)
     .AddEnvironmentVariables()
@@ -56,7 +55,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = JwtBearerDefaults.AuthenticationScheme,
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Kindly enter token issued by ditadev (\"bearer {token}\")"
+        Description = "Kindly enter token issued by ditadev (\"bearer {token}\")",
     });
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
@@ -64,13 +63,16 @@ builder.Services.AddSwaggerGen(options =>
             new OpenApiSecurityScheme
             {
                 Reference = new OpenApiReference
-                    { Type = ReferenceType.SecurityScheme, Id = JwtBearerDefaults.AuthenticationScheme },
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = JwtBearerDefaults.AuthenticationScheme,
+                },
                 Scheme = "oauth2",
                 Name = JwtBearerDefaults.AuthenticationScheme,
-                In = ParameterLocation.Header
+                In = ParameterLocation.Header,
             },
             new List<string>()
-        }
+        },
     });
 });
 
@@ -83,7 +85,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
                 .GetBytes(appSettings.JwtSecret)),
             ValidateIssuer = false,
-            ValidateAudience = false
+            ValidateAudience = false,
         };
     });
 // builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost"));
@@ -94,9 +96,9 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Conn
 
 builder.Services.AddHostedService<CleanUpHostedService>();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+using (IServiceScope scope = app.Services.CreateScope())
 {
     var dataContext = scope.ServiceProvider.GetRequiredService<DataContext>();
     dataContext.Database.Migrate();
@@ -109,7 +111,7 @@ app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(
         Path.Combine(builder.Environment.ContentRootPath, "WebRoot")),
-    RequestPath = "/static"
+    RequestPath = "/static",
 });
 app.UseAuthentication();
 app.UseAuthorization();

@@ -20,16 +20,16 @@ public class BlogCommandResponse
         Updated = post.Updated;
     }
 
-    public long PostId { get; set; }
-    public string CoverImagePath { get; set; }
-    public string Title { get; set; }
-    public string Summary { get; set; }
-    public string Body { get; set; }
-    public string? Tags { get; set; }
-    public string? CategoryName { get; set; }
-    public Category? Category { get; set; }
-    public long AuthorId { get; set; }
-    public Author? Author { get; set; }
-    public DateTime Created { get; set; }
-    public DateTime Updated { get; set; }
+    private long PostId { get; set; }
+    private string CoverImagePath { get; set; }
+    private string Title { get; set; }
+    private string Summary { get; set; }
+    private string Body { get; set; }
+    private string? Tags { get; set; }
+    private string? CategoryName { get; set; }
+    private Category? Category { get; set; }
+    private long AuthorId { get; set; }
+    private Author? Author { get; set; }
+    private DateTime Created { get; set; }
+    private DateTime Updated { get; set; }
 }
