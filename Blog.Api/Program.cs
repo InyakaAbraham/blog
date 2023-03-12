@@ -35,6 +35,7 @@ var config = new ConfigurationBuilder()
 var appSettings = config.GetSection("AppSettings").Get<AppSettings>();
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
+
 builder.Services.AddSingleton(appSettings);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
@@ -44,6 +45,7 @@ builder.Services.AddDbContextFactory<DataContext>(options =>
     options.UseMySql(appSettings.MySqlDsn, ServerVersion.AutoDetect(appSettings.MySqlDsn));
 });
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 builder.Services.AddSwaggerGen(options =>
 {

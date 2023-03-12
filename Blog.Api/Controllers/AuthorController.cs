@@ -1,6 +1,7 @@
 using Blog.Api.Dtos;
 using Blog.Domain.User.Commands;
 using Blog.Domain.User.Queries;
+using Blog.Features;
 using Blog.Models;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -15,11 +16,13 @@ namespace Blog.Api.Controllers;
 public class AuthorController : AbstractController
 {
     private readonly IMediator _mediator;
+    private readonly IAuthenticationService _authenticationService;
 
     public AuthorController(
-        IMediator mediator)
+        IMediator mediator, IAuthenticationService authenticationService)
     {
         _mediator = mediator;
+        _authenticationService = authenticationService;
     }
 
     [HttpPost]
@@ -158,13 +161,18 @@ public class AuthorController : AbstractController
             Password = password,
             State = 9,
         };
-        return Ok(await _mediator.Send(request, cancellationToken));
 
-        // return Ok(new JwtDto
-        // (new JwtDto.Credentials
-        // {
-        //     AccessToken = await _userService.CreateJwtToken(author),
-        // }));
+        var response = await _mediator.Send(request, cancellationToken);
+
+        return Ok(new JwtDto
+        (new JwtDto.Credentials
+        {
+          AccessToken = await _authenticationService.CreateJwtToken(new Author()
+          {
+              AuthorId = response.AuthorId,
+              Roles = response.Roles
+          }),
+        }));
     }
 
     [HttpGet]

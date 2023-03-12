@@ -1,6 +1,4 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+
 using Blog.Features;
 using Blog.Models;
 using Blog.Persistence;
@@ -8,7 +6,6 @@ using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
-using Microsoft.IdentityModel.Tokens;
 using Role = Blog.Models.Role;
 
 namespace Blog.Domain.User.Commands;
@@ -16,17 +13,15 @@ namespace Blog.Domain.User.Commands;
 public class UserCommandHandler: IRequestHandler<UserCommand, UserCommandResponse>
 {
     private readonly DataContext _dataContext;
-    private readonly AppSettings _appSettings;
     private readonly IEmailService _emailService;
     private readonly IDatabase _database;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private static readonly Random GenerateRandomToken = new();
 
 
-    public UserCommandHandler(DataContext dataContext, AppSettings appSettings, IEmailService emailService,         IConnectionMultiplexer redis, IHttpContextAccessor httpContextAccessor)
+    public UserCommandHandler(DataContext dataContext,  IEmailService emailService, IConnectionMultiplexer redis, IHttpContextAccessor httpContextAccessor)
     {
         _dataContext = dataContext;
-        _appSettings = appSettings;
         _emailService = emailService;
         _httpContextAccessor = httpContextAccessor;
         _database = redis.GetDatabase();
@@ -256,7 +251,6 @@ public class UserCommandHandler: IRequestHandler<UserCommand, UserCommandRespons
                  _dataContext.Update(author);
                  await _dataContext.SaveChangesAsync(cancellationToken);
 
-              Console.WriteLine(CreateJwtToken(author));
               return new UserCommandResponse(author);
             }
         }
@@ -265,34 +259,7 @@ public class UserCommandHandler: IRequestHandler<UserCommand, UserCommandRespons
             Console.WriteLine($"An exception occurred: {ex.Message}");
             return null;
         }
-
         return null;
-    }
-
-    public Task<string> CreateJwtToken(Author author)
-    {
-        try
-        {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appSettings.JwtSecret));
-            var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-            var claims = new List<Claim>
-                { new("sub", author.AuthorId.ToString()), new("role", UserRole.Default.ToString()) };
-
-            claims.AddRange(author.Roles.Select(role => new Claim("role", role!.Id.ToString())));
-
-            return Task.FromResult(new JwtSecurityTokenHandler().WriteToken(
-                new JwtSecurityToken
-                (
-                    claims: claims,
-                    expires: DateTime.Now.AddDays(1),
-                    signingCredentials: cred
-                )));
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"An exception occurred: {ex.Message}");
-            return null;
-        }
     }
 
     private string CreateRandomToken()
