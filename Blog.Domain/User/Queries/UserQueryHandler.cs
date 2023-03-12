@@ -23,7 +23,7 @@ public class UserQueryHandler : IRequestHandler<UserQueryRequest, UserQueryRespo
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"An exception occurred: {ex.Message}");
+            Console.WriteLine($"No author with Id {request.AuthorId} : {ex}");
             return null!;
         }
     }

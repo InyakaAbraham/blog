@@ -31,64 +31,67 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
         try
         {
             if (request.State == 1)
-            {
-                string token = CreateRandomToken();
-
-                await _database.StringSetAsync($"email_verification_otp:{request.EmailAddress}",
-                    token, TimeSpan.FromDays(365));
-
-                _emailService.Send("to_address@example.com", "Verification Token", $"Your OTP is {token} valid for 20Minutes.");
-                if (request.EmailAddress != null)
+                try
                 {
-                    Author? authorByEmail = await GetAuthorByEmailAddress(request.EmailAddress);
-                    if (request.Username != null)
+                    string token = CreateRandomToken();
+
+                    await _database.StringSetAsync($"email_verification_otp:{request.EmailAddress}",
+                        token, TimeSpan.FromDays(365));
+
+                    _emailService.Send("to_address@example.com", "Verification Token", $"Your OTP is {token} valid for 20Minutes.");
+                    if (request.EmailAddress != null)
                     {
-                        Author? authorByUsername = await GetAuthorByUsername(request.Username);
-
-                        if (authorByEmail == null && authorByUsername == null)
+                        Author? authorByEmail = await GetAuthorByEmailAddress(request.EmailAddress);
+                        if (request.Username != null)
                         {
-                            if (request.Password != null)
-                            {
-                                var author = new Author
-                                {
-                                    EmailAddress = request.EmailAddress,
-                                    Roles = new List<Role?>
-                                    {
-                                        await _dataContext.Roles.SingleOrDefaultAsync(x => x.Id == UserRole.Author, cancellationToken),
-                                    },
-                                    Description = request.Description,
-                                    Username = request.Username,
-                                    CreatedAt = DateTime.UtcNow,
-                                    FirstName = request.FirstName,
-                                    LastName = request.LastName,
-                                    PasswordHash = await CreatePasswordHash(request.Password),
-                                    LastLogin = DateTime.Now,
-                                };
+                            Author? authorByUsername = await GetAuthorByUsername(request.Username);
 
-                                _dataContext.Authors.Add(author);
-                                await _dataContext.SaveChangesAsync(cancellationToken);
-                                return new UserCommandResponse(author);
+                            if (authorByEmail == null && authorByUsername == null)
+                            {
+                                if (request.Password != null)
+                                {
+                                    var author = new Author
+                                    {
+                                        EmailAddress = request.EmailAddress,
+                                        Roles = new List<Role?>
+                                        {
+                                            await _dataContext.Roles.SingleOrDefaultAsync(x => x.Id == UserRole.Author, cancellationToken),
+                                        },
+                                        Description = request.Description,
+                                        Username = request.Username,
+                                        CreatedAt = DateTime.UtcNow,
+                                        FirstName = request.FirstName,
+                                        LastName = request.LastName,
+                                        PasswordHash = await CreatePasswordHash(request.Password),
+                                        LastLogin = DateTime.Now,
+                                    };
+
+                                    _dataContext.Authors.Add(author);
+                                    await _dataContext.SaveChangesAsync(cancellationToken);
+                                    return new UserCommandResponse(author);
+                                }
                             }
                         }
                     }
                 }
-
-                throw new ArgumentNullException(nameof(request), "User with username/email already exists");
-            }
+                catch (Exception ex)
+                {
+                    throw new ArgumentNullException(nameof(request), "User with username/email already exists");
+                }
 
             if (request.State == 2)
             {
-                Author? author = await GetAuthorById(GetContextUserId());
-                if (request.Username != null)
+                try
                 {
-                    Author? authorBuUsername = await GetAuthorByUsername(request.Username);
-
+                    Author? author = await GetAuthorById(GetContextUserId());
                     if (author == null) throw new ArgumentNullException(nameof(request), "Author does not exist");
-                    if (authorBuUsername != null && request.Username != author.Username) throw new ArgumentNullException(nameof(request), "Username already exist");
-                }
 
-                if (author != null)
-                {
+                    if (request.Username != null)
+                    {
+                        Author? authorBuUsername = await GetAuthorByUsername(request.Username);
+                        if (authorBuUsername != null && request.Username != author.Username) throw new ArgumentNullException(nameof(request), "Username already exist");
+                    }
+
                     author.Username = request.Username;
                     author.FirstName = request.FirstName;
                     author.LastName = request.LastName;
@@ -97,6 +100,10 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
                     _dataContext.Authors.Update(author);
                     await _dataContext.SaveChangesAsync(cancellationToken);
                     return new UserCommandResponse(author);
+                }
+                catch (Exception ex)
+                {
+                    throw new ArgumentNullException(nameof(request), "Kindly login");
                 }
             }
 
@@ -120,7 +127,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"An exception occurred: {ex.Message}");
+                    Console.WriteLine($"An exception occurred: {ex}");
                     return null!;
                 }
             }
@@ -189,7 +196,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"An exception occurred: {ex.Message}");
+                    Console.WriteLine($"An exception occurred: {ex}");
                     return null!;
                 }
             }
@@ -218,7 +225,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"An exception occurred: {ex.Message}");
+                    Console.WriteLine($"An exception occurred: {ex}");
                     return null!;
                 }
             }
@@ -251,7 +258,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"An exception occurred: {ex.Message}");
+                    Console.WriteLine($"An exception occurred: {ex}");
                     return null!;
                 }
             }
@@ -278,7 +285,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"An exception occurred: {ex.Message}");
+                    Console.WriteLine($"An exception occurred: {ex}");
                     return null!;
                 }
             }
@@ -303,7 +310,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"An exception occurred: {ex.Message}");
+            Console.WriteLine($"An exception occurred: {ex}");
             return null!;
         }
 
@@ -337,7 +344,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"An exception occurred: {ex.Message}");
+            Console.WriteLine($"No author found: {ex}");
             return null;
         }
     }
@@ -350,7 +357,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"An exception occurred: {ex.Message}");
+            Console.WriteLine($"No author found: {ex}");
             return null;
         }
     }
@@ -363,7 +370,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"An exception occurred: {ex.Message}");
+            Console.WriteLine($"No Author found: {ex}");
             return null;
         }
     }
@@ -381,7 +388,7 @@ public class UserCommandHandler : IRequestHandler<UserCommand, UserCommandRespon
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"An exception occurred: {ex.Message}");
+            Console.WriteLine($"Invalid username/password: {ex}");
             return false;
         }
     }

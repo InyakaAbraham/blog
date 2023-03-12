@@ -153,7 +153,7 @@ public class AuthorController : AbstractController
 
     [HttpPost]
     [ProducesResponseType(typeof(EmptySuccessResponseDto), 200)]
-    public async Task<ActionResult<JwtDto>> Login(string email, string password, CancellationToken cancellationToken)
+    public async Task<ActionResult<SuccessResponseDto<JwtDto>>> Login(string email, string password, CancellationToken cancellationToken)
     {
         var request = new UserCommand
         {
@@ -164,6 +164,10 @@ public class AuthorController : AbstractController
 
         UserCommandResponse response = await _mediator.Send(request, cancellationToken);
 
+        if (response == null)
+        {
+            return BadRequest("Invalid email or password");
+        }
         return Ok(new JwtDto
         (new JwtDto.Credentials
         {
